@@ -1,0 +1,13 @@
+version: '3.8'
+
+services:
+  app:
+    container_name: nestjs
+    build:
+      context: .
+    ports:
+      - '3030:3030'
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+    env_file:
+      - ./.env
