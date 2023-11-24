@@ -22,6 +22,8 @@ import { PermissiongroupsModule } from 'src/permissiongroups/permissiongroups.mo
 import { MenusModule } from 'src/menus/menus.module';
 import { RedisModule } from 'src/redis/redis.module';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
+import { CaptchaModule } from './captcha/captcha.module';
+import { EmailModule } from './email/email.module';
 
 @Module({
 	imports: [
@@ -48,7 +50,9 @@ import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 				return createRedisConfigs(configService, clients); // 确保这个调用是异步的
 			},
 			inject: [ConfigService]
-		})
+		}),
+		CaptchaModule,
+		EmailModule
 	],
 	controllers: [AppController],
 	providers: [
