@@ -9,9 +9,9 @@ import {
 	ApiNotFoundResponse,
 	ApiCreatedResponse
 } from '@nestjs/swagger';
-import { Public } from '../common';
+import { Public } from 'src/common';
 import { AuthService } from './auth.service';
-import { LoginDto, RefreshTokenDto, RegisterDto, Token } from './dto';
+import { LoginDto, RefreshTokenDto, RegisterDto, SignUpFormData, Token } from './dto';
 
 @Controller('api/auth')
 @ApiTags('auth')
@@ -40,6 +40,24 @@ export class AuthController {
 	logout(@Request() req): Promise<boolean> {
 		const id = req.user.id;
 		return this.auth.logout(id);
+	}
+
+	@Public()
+	@Post('validateCaptcha')
+	@ApiOkResponse({ description: 'Validate captcha and initiate email verification.' })
+	async validateCaptchaAndInitiateEmailVerification(
+		@Body() signupData: SignUpFormData
+	): Promise<{ isValid: boolean; token?: string }> {
+		const validationResponse = await this.auth.validateCaptcha(signupData);
+
+		if (validationResponse.isValid) {
+			const token = await this.auth.sendEmailVerificationCode(
+				signupData.email
+			);
+			return { isValid: true, token };
+		} else {
+			return { isValid: false };
+		}
 	}
 
 	@Public()

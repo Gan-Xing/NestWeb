@@ -7,7 +7,9 @@ import { JwtConfig, SecurityConfig } from 'src/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { PasswordService } from 'src/password/password.service';
 import { RedisService } from 'src/redis/redis.service';
-import { RegisterDto, Token } from './dto';
+import { CaptchaService } from 'src/captcha/captcha.service';
+import { EmailService } from 'src/email/email.service';
+import { RegisterDto, SignUpFormData, Token } from './dto';
 
 @Injectable()
 export class AuthService {
@@ -16,7 +18,9 @@ export class AuthService {
 		private readonly prisma: PrismaService,
 		private readonly passwordService: PasswordService,
 		private readonly configService: ConfigService,
-		private readonly redisService: RedisService
+		private readonly redisService: RedisService,
+		private readonly captchaService: CaptchaService,
+		private readonly emailService: EmailService
 	) {}
 	// 测试 Redis 的方法
 	async testRedis(): Promise<void> {
@@ -31,6 +35,30 @@ export class AuthService {
 		// console.log(`Value from secondary client: ${value2}`);
 		// return this.redisClient.get('testKey');
 	}
+	async validateCaptcha(signupData: SignUpFormData): Promise<{ isValid: boolean }> {
+		const { captchaToken, captcha } = signupData;
+
+		// 使用 CaptchaService 验证验证码
+		const isCaptchaValid = await this.captchaService.validateCaptcha(
+			captchaToken,
+			captcha
+		);
+		if (isCaptchaValid) {
+			await this.redisService.set(
+				`userRegistration:${captchaToken}`,
+				signupData,
+				60 * 60
+			);
+			return { isValid: isCaptchaValid };
+		} else {
+			return { isValid: isCaptchaValid };
+		}
+	}
+
+	async sendEmailVerificationCode(email: string): Promise<string> {
+		return await this.emailService.sendEmailVerificationCode(email);
+	}
+
 	async register(registerUser: RegisterDto): Promise<Token> {
 		// 确保邮箱是唯一的
 		const existingUser = await this.prisma.user.findUnique({
