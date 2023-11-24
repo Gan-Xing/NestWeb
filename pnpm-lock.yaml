@@ -47,6 +47,9 @@ dependencies:
   ioredis:
     specifier: ^5.3.2
     version: registry.npmmirror.com/ioredis@5.3.2
+  nodemailer:
+    specifier: ^6.9.7
+    version: registry.npmmirror.com/nodemailer@6.9.7
   passport:
     specifier: ^0.6.0
     version: registry.npmmirror.com/passport@0.6.0
@@ -59,6 +62,9 @@ dependencies:
   rxjs:
     specifier: ^7.8.1
     version: registry.npmmirror.com/rxjs@7.8.1
+  svg-captcha:
+    specifier: ^1.4.0
+    version: registry.npmmirror.com/svg-captcha@1.4.0
 
 devDependencies:
   '@nestjs/cli':
@@ -5537,6 +5543,13 @@ packages:
     version: 2.0.13
     dev: true
 
+  registry.npmmirror.com/nodemailer@6.9.7:
+    resolution: {integrity: sha512-rUtR77ksqex/eZRLmQ21LKVH5nAAsVicAtAYudK7JgwenEDZ0UIQ1adUGqErz7sMkWYxWTTU1aeP2Jga6WQyJw==, registry: https://registry.npm.taobao.org/, tarball: https://registry.npmmirror.com/nodemailer/-/nodemailer-6.9.7.tgz}
+    name: nodemailer
+    version: 6.9.7
+    engines: {node: '>=6.0.0'}
+    dev: false
+
   registry.npmmirror.com/nopt@5.0.0:
     resolution: {integrity: sha512-Tbj67rffqceeLpcRXrT7vKAN8CwfPeIBgM7E6iBkmKLV7bEMwpGgYLGv0jACUsECaa/vuxP0IjEont6umdMgtQ==, registry: https://registry.npm.taobao.org/, tarball: https://registry.npmmirror.com/nopt/-/nopt-5.0.0.tgz}
     name: nopt
@@ -5608,6 +5621,15 @@ packages:
     dependencies:
       mimic-fn: registry.npmmirror.com/mimic-fn@2.1.0
     dev: true
+
+  registry.npmmirror.com/opentype.js@0.7.3:
+    resolution: {integrity: sha512-Veui5vl2bLonFJ/SjX/WRWJT3SncgiZNnKUyahmXCc2sa1xXW15u3R/3TN5+JFiP7RsjK5ER4HA5eWaEmV9deA==, registry: https://registry.npm.taobao.org/, tarball: https://registry.npmmirror.com/opentype.js/-/opentype.js-0.7.3.tgz}
+    name: opentype.js
+    version: 0.7.3
+    hasBin: true
+    dependencies:
+      tiny-inflate: registry.npmmirror.com/tiny-inflate@1.0.3
+    dev: false
 
   registry.npmmirror.com/optionator@0.9.3:
     resolution: {integrity: sha512-JjCoypp+jKn1ttEFExxhetCKeJt9zhAgAve5FXHixTvFDW/5aEktX9bufBKLRRMdU7bNtpLfcGu94B3cdEJgjg==, registry: https://registry.npm.taobao.org/, tarball: https://registry.npmmirror.com/optionator/-/optionator-0.9.3.tgz}
@@ -6574,6 +6596,15 @@ packages:
     engines: {node: '>= 0.4'}
     dev: true
 
+  registry.npmmirror.com/svg-captcha@1.4.0:
+    resolution: {integrity: sha512-/fkkhavXPE57zRRCjNqAP3txRCSncpMx3NnNZL7iEoyAtYwUjPhJxW6FQTQPG5UPEmCrbFoXS10C3YdJlW7PDg==, registry: https://registry.npm.taobao.org/, tarball: https://registry.npmmirror.com/svg-captcha/-/svg-captcha-1.4.0.tgz}
+    name: svg-captcha
+    version: 1.4.0
+    engines: {node: '>=4.x'}
+    dependencies:
+      opentype.js: registry.npmmirror.com/opentype.js@0.7.3
+    dev: false
+
   registry.npmmirror.com/swagger-ui-dist@5.9.1:
     resolution: {integrity: sha512-5zAx+hUwJb9T3EAntc7TqYkV716CMqG6sZpNlAAMOMWkNXRYxGkN8ADIvD55dQZ10LxN90ZM/TQmN7y1gpICnw==, registry: https://registry.npm.taobao.org/, tarball: https://registry.npmmirror.com/swagger-ui-dist/-/swagger-ui-dist-5.9.1.tgz}
     name: swagger-ui-dist
@@ -6670,6 +6701,12 @@ packages:
     name: through
     version: 2.3.8
     dev: true
+
+  registry.npmmirror.com/tiny-inflate@1.0.3:
+    resolution: {integrity: sha512-pkY1fj1cKHb2seWDy0B16HeWyczlJA9/WW3u3c4z/NiWDsO3DOU5D7nhTLE9CF0yXv/QZFY7sEJmj24dK+Rrqw==, registry: https://registry.npm.taobao.org/, tarball: https://registry.npmmirror.com/tiny-inflate/-/tiny-inflate-1.0.3.tgz}
+    name: tiny-inflate
+    version: 1.0.3
+    dev: false
 
   registry.npmmirror.com/tmp@0.0.33:
     resolution: {integrity: sha512-jRCJlojKnZ3addtTOjdIqoRuPEKBvNXcGYqzO6zWZX8KfKEpnGY5jfggJQ3EjKuu8D4bJRr0y+cYJFmYbImXGw==, registry: https://registry.npm.taobao.org/, tarball: https://registry.npmmirror.com/tmp/-/tmp-0.0.33.tgz}
