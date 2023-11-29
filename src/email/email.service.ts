@@ -1,8 +1,8 @@
 // email.service.ts
 import { Injectable } from '@nestjs/common';
 import * as nodemailer from 'nodemailer';
-import { randomBytes } from 'crypto';
 import { RedisService } from 'src/redis/redis.service';
+import { MyRandom } from 'src/common/utils/random.utils';
 
 @Injectable()
 export class EmailService {
@@ -22,33 +22,42 @@ export class EmailService {
 	}
 
 	async sendEmailVerificationCode(email: string): Promise<string> {
-		const emailVerificationCode = this.generateEmailVerificationCode();
+		const emailVerificationCode = MyRandom.hex();
+		const expirationTime = 15; // 验证码有效期，单位为分钟
+
+		const htmlContent = `
+    <div style="font-family: Arial, sans-serif; color: #333;">
+      <h2 style="color: #4F8A10;">甘意咨询邮箱验证</h2>
+      <p>您好，</p>
+      <p>您的甘意咨询验证码是：<strong style="color: #0000FF;">${emailVerificationCode}</strong>。</p>
+      <p>请注意，该验证码将在 <strong>${expirationTime}</strong> 分钟后失效。如果您没有请求此验证码，请忽略此邮件。</p>
+      <p style="margin-top: 20px;">此致<br>甘意咨询团队</p>
+    </div>
+  `;
 
 		// 构建邮件内容
 		const mailOptions = {
 			from: process.env.MAIL_FROM, // 发件人地址
 			to: email, // 收件人地址
-			subject: 'Email Verification Code', // 主题
-			text: `Your verification code is: ${emailVerificationCode}`, // 纯文本内容
-			html: `<p>Your verification code is: <b>${emailVerificationCode}</b></p>` // HTML 内容
+			subject: '甘意咨询邮箱验证', // 主题
+			text: `您的甘意咨询验证码是：${emailVerificationCode}。该验证码将在${expirationTime}分钟后失效。`, // 纯文本内容
+			html: htmlContent
 		};
 
 		// 发送邮件
-		await this.transporter.sendMail(mailOptions);
+		//TODO 该处应该添加Kafka进行队列消息发布，之后再改。
+		this.transporter.sendMail(mailOptions);
 
 		// 可选：保存验证码到 Redis 或数据库
-		const token = `emailVerification:${email}_${randomBytes(8).toString('hex')}`; // 加入随机字符串
-		await this.redisService.set(token, emailVerificationCode, 15 * 60);
+
+		const token = `emailVerification:${email}_${MyRandom.hex(8)}`;
+		console.log(
+			'token, emailVerificationCode, expirationTime * 60',
+			token,
+			emailVerificationCode,
+			expirationTime * 60
+		);
+		await this.redisService.set(token, emailVerificationCode, expirationTime * 60);
 		return token; // 返回 token
-	}
-
-	async validateEmailVerificationCode(token: string, inputCode: string): Promise<boolean> {
-		const storedCode = await this.redisService.get(token);
-		return storedCode === inputCode;
-	}
-
-	private generateEmailVerificationCode(): string {
-		// 使用 crypto 生成更安全的验证码
-		return randomBytes(3).toString('hex');
 	}
 }
