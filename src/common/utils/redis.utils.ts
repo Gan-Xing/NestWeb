@@ -3,7 +3,7 @@
 import { ConfigService } from '@nestjs/config';
 import { RedisConfig } from 'src/common';
 
-export function createRedisConfigs(
+export function initializeRedisClients(
 	configService: ConfigService,
 	clients: string[]
 ): Promise<RedisConfig[]> {

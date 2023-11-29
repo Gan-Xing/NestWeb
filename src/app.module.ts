@@ -7,7 +7,7 @@ import {
 	LoggingInterceptor,
 	TransformInterceptor,
 	HttpFilter,
-	createRedisConfigs
+	initializeRedisClients
 } from 'src/common';
 import { AppController } from 'src/app.controller';
 import { AppService } from 'src/app.service';
@@ -47,7 +47,7 @@ import { EmailModule } from './email/email.module';
 				const clients = configService
 					.get<string>('REDIS_CLIENTS')
 					.split(',');
-				return createRedisConfigs(configService, clients); // 确保这个调用是异步的
+				return initializeRedisClients(configService, clients); // 确保这个调用是异步的
 			},
 			inject: [ConfigService]
 		}),
