@@ -3,7 +3,7 @@ import { Injectable, NotFoundException, UnauthorizedException } from '@nestjs/co
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { User } from '@prisma/client';
-import { JwtConfig, SecurityConfig } from 'src/common';
+import { JwtConfig, MyRandom, SecurityConfig } from 'src/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { PasswordService } from 'src/password/password.service';
 import { RedisService } from 'src/redis/redis.service';
@@ -57,6 +57,24 @@ export class AuthService {
 
 	async sendEmailVerificationCode(email: string): Promise<string> {
 		return await this.emailService.sendEmailVerificationCode(email);
+	}
+
+	async validateEmailVerificationCode(token: string, inputCode: string): Promise<boolean> {
+		console.log('传入的key', token, '传递进来的验证码是', inputCode);
+		return this.redisService.compareToken(token, inputCode);
+	}
+
+	async sendSMSVerificationCode(phone: string): Promise<string> {
+		const smsCode = MyRandom.hex(3);
+		const expirationTime = 15; // 短信验证码有效期，单位为分钟
+
+		// 发送短信验证码的逻辑
+		// TODO: 实际发送短信的代码
+
+		// 保存验证码到 Redis
+		const token = `smsVerification:${phone}_${MyRandom.hex(8)}`;
+		await this.redisService.set(token, smsCode, expirationTime * 60);
+		return smsCode;
 	}
 
 	async register(registerUser: RegisterDto): Promise<Token> {

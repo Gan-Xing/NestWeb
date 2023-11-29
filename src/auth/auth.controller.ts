@@ -12,6 +12,7 @@ import {
 import { Public } from 'src/common';
 import { AuthService } from './auth.service';
 import { LoginDto, RefreshTokenDto, RegisterDto, SignUpFormData, Token } from './dto';
+import { ValidateEmailDto } from './dto/validate-token.dto';
 
 @Controller('api/auth')
 @ApiTags('auth')
@@ -55,6 +56,28 @@ export class AuthController {
 				signupData.email
 			);
 			return { isValid: true, token };
+		} else {
+			return { isValid: false };
+		}
+	}
+
+	@Public()
+	@Post('validateEmail')
+	@ApiOkResponse({ description: 'Validate email token and send SMS code.' })
+	async validateEmailToken(
+		@Body() validateEmailDto: ValidateEmailDto
+	): Promise<{ isValid: boolean; token?: string; code?: string }> {
+		const isValid = await this.auth.validateEmailVerificationCode(
+			validateEmailDto.token,
+			validateEmailDto.code
+		);
+		console.log('最终的判断结果', isValid);
+
+		if (isValid) {
+			const token = await this.auth.sendSMSVerificationCode(
+				validateEmailDto.phone
+			);
+			return { isValid, token };
 		} else {
 			return { isValid: false };
 		}
