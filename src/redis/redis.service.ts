@@ -50,6 +50,33 @@ export class RedisService {
 		if (decompress && data) {
 			data = await gunzipAsync(data);
 		}
-		return data ? JSON.parse(data.toString()) : null;
+		if (data) {
+			try {
+				return JSON.parse(data.toString());
+			} catch (e) {
+				return data.toString();
+			}
+		}
+		return null;
+	}
+
+	async compareToken(
+		key: string,
+		newToken: string,
+		clientName: string = 'default'
+	): Promise<boolean> {
+		const client = this.getClient(clientName);
+		let storedToken = await client.get(key);
+
+		// 如果 storedToken 是字符串，去除两端的引号
+		if (
+			typeof storedToken === 'string' &&
+			storedToken.startsWith('"') &&
+			storedToken.endsWith('"')
+		) {
+			storedToken = storedToken.substring(1, storedToken.length - 1);
+		}
+
+		return storedToken === newToken;
 	}
 }
