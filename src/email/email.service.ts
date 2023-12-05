@@ -58,6 +58,11 @@ export class EmailService {
 			expirationTime * 60
 		);
 		await this.redisService.set(token, emailVerificationCode, expirationTime * 60);
+		await this.redisService.set(
+			`emailRefresh:${email}`,
+			emailVerificationCode,
+			expirationTime * 60
+		);
 		return token; // 返回 token
 	}
 }
