@@ -42,13 +42,16 @@ model PermissionGroup {
 
 model User {
   id           Int       @id @default(autoincrement())
+  firstName    String? 
+  lastName     String?
+  phoneNumber  String?   @unique 
   email        String    @unique
   password     String
   createdAt    DateTime  @default(now())
   status       String?    
   username     String
   gender       String?    
-  departmentId Int
+  departmentId Int?
   updatedAt    DateTime  @updatedAt
   hashedRt     String?
   isAdmin      Boolean   @default(false)
