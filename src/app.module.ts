@@ -24,6 +24,7 @@ import { RedisModule } from 'src/redis/redis.module';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { CaptchaModule } from './captcha/captcha.module';
 import { EmailModule } from './email/email.module';
+import { SmsModule } from './sms/sms.module';
 
 @Module({
 	imports: [
@@ -52,7 +53,8 @@ import { EmailModule } from './email/email.module';
 			inject: [ConfigService]
 		}),
 		CaptchaModule,
-		EmailModule
+		EmailModule,
+		SmsModule
 	],
 	controllers: [AppController],
 	providers: [

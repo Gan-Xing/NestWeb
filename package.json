@@ -22,6 +22,10 @@
     "seed": "ts-node prisma/seed.ts"
   },
   "dependencies": {
+    "@alicloud/dypnsapi20170525": "^1.1.0",
+    "@alicloud/openapi-client": "^0.4.7",
+    "@alicloud/tea-typescript": "^1.8.0",
+    "@alicloud/tea-util": "^1.4.7",
     "@faker-js/faker": "^8.0.2",
     "@nestjs/common": "^10.0.0",
     "@nestjs/config": "^3.0.0",
@@ -31,7 +35,7 @@
     "@nestjs/passport": "^10.0.0",
     "@nestjs/platform-express": "^10.0.0",
     "@nestjs/swagger": "^7.1.1",
-    "@prisma/client": "^5.3.1",
+    "@prisma/client": "^5.6.0",
     "bcrypt": "^5.1.0",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.0",
@@ -60,7 +64,7 @@
     "eslint-plugin-prettier": "^4.2.1",
     "jest": "^29.5.0",
     "prettier": "^2.8.8",
-    "prisma": "^5.0.0",
+    "prisma": "^5.6.0",
     "source-map-support": "^0.5.21",
     "supertest": "^6.3.3",
     "ts-jest": "^29.1.0",
