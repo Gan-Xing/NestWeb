@@ -11,6 +11,7 @@ import { AuthService } from './auth.service';
 import { JwtStrategy } from './jwt.strategy';
 import { CaptchaModule } from 'src/captcha/captcha.module';
 import { EmailModule } from 'src/email/email.module';
+import { SmsModule } from 'src/sms/sms.module';
 
 @Module({
 	imports: [
@@ -20,6 +21,7 @@ import { EmailModule } from 'src/email/email.module';
 		PasswordModule,
 		CaptchaModule,
 		EmailModule,
+		SmsModule,
 		JwtModule.registerAsync({
 			useFactory: async (configService: ConfigService) => {
 				const securityConfig =

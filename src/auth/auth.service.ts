@@ -9,7 +9,8 @@ import { PasswordService } from 'src/password/password.service';
 import { RedisService } from 'src/redis/redis.service';
 import { CaptchaService } from 'src/captcha/captcha.service';
 import { EmailService } from 'src/email/email.service';
-import { RegisterDto, SignUpFormData, Token } from './dto';
+import { SmsService } from 'src/sms/sms.service';
+import { RegisterDto, SignUpFormData, Token, ValidateTokenDto } from './dto';
 
 @Injectable()
 export class AuthService {
@@ -20,7 +21,8 @@ export class AuthService {
 		private readonly configService: ConfigService,
 		private readonly redisService: RedisService,
 		private readonly captchaService: CaptchaService,
-		private readonly emailService: EmailService
+		private readonly emailService: EmailService,
+		private readonly smsService: SmsService
 	) {}
 	// 测试 Redis 的方法
 	async testRedis(): Promise<void> {
@@ -36,7 +38,7 @@ export class AuthService {
 		// return this.redisClient.get('testKey');
 	}
 	async validateCaptcha(signupData: SignUpFormData): Promise<{ isValid: boolean }> {
-		const { captchaToken, captcha } = signupData;
+		const { captchaToken, captcha, phoneNumber } = signupData;
 
 		// 使用 CaptchaService 验证验证码
 		const isCaptchaValid = await this.captchaService.validateCaptcha(
@@ -45,7 +47,7 @@ export class AuthService {
 		);
 		if (isCaptchaValid) {
 			await this.redisService.set(
-				`userRegistration:${captchaToken}`,
+				`userRegistration:${phoneNumber}`,
 				signupData,
 				60 * 60
 			);
@@ -55,35 +57,66 @@ export class AuthService {
 		}
 	}
 
+	async getUserFromRedis(key: string) {
+		const value = await this.redisService.get(key);
+		return value;
+	}
+
 	async sendEmailVerificationCode(email: string): Promise<string> {
 		return await this.emailService.sendEmailVerificationCode(email);
 	}
 
 	async validateEmailVerificationCode(token: string, inputCode: string): Promise<boolean> {
-		console.log('传入的key', token, '传递进来的验证码是', inputCode);
 		return this.redisService.compareToken(token, inputCode);
 	}
 
 	async sendSMSVerificationCode(phone: string): Promise<string> {
-		const smsCode = MyRandom.hex(3);
 		const expirationTime = 15; // 短信验证码有效期，单位为分钟
+		const smsToken = MyRandom.hex(3);
 
-		// 发送短信验证码的逻辑
-		// TODO: 实际发送短信的代码
+		try {
+			const res = await this.smsService.sendSMSVerificationCode(phone);
 
-		// 保存验证码到 Redis
-		const token = `smsVerification:${phone}_${MyRandom.hex(8)}`;
-		await this.redisService.set(token, smsCode, expirationTime * 60);
-		return smsCode;
+			if (res) {
+				const key = `smsVerification:${phone}_${MyRandom.hex(8)}`;
+				await this.redisService.set(
+					key,
+					smsToken,
+					expirationTime * 60
+				);
+				return key;
+			} else {
+				return 'failed';
+			}
+		} catch {
+			return 'failed';
+		}
+	}
+
+	async validateSMSVerificationCode(ValidateToken: ValidateTokenDto) {
+		return await this.smsService.validateSMSVerificationCode(
+			ValidateToken.phone,
+			ValidateToken.code
+		);
 	}
 
 	async register(registerUser: RegisterDto): Promise<Token> {
 		// 确保邮箱是唯一的
-		const existingUser = await this.prisma.user.findUnique({
+		const existingEmail = await this.prisma.user.findUnique({
 			where: { email: registerUser.email.toLowerCase() }
 		});
-		if (existingUser) {
+		if (existingEmail) {
 			throw new Error('Email already in use');
+		}
+
+		// 确保电话号码是唯一的
+		if (registerUser.phoneNumber) {
+			const existingPhone = await this.prisma.user.findUnique({
+				where: { phoneNumber: registerUser.phoneNumber }
+			});
+			if (existingPhone) {
+				throw new Error('Phone number already in use');
+			}
 		}
 
 		const hashedPassword = await this.passwordService.hashPassword(
@@ -91,7 +124,9 @@ export class AuthService {
 		);
 
 		// 设定默认的用户角色
-		const defaultRole = await this.prisma.role.findUnique({ where: { id: 2 } });
+		const defaultRole = await this.prisma.role.findUnique({
+			where: { name: 'User' }
+		});
 		if (!defaultRole) {
 			throw new Error('Default role does not exist');
 		}

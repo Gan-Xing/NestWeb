@@ -12,7 +12,7 @@ import {
 import { Public } from 'src/common';
 import { AuthService } from './auth.service';
 import { LoginDto, RefreshTokenDto, RegisterDto, SignUpFormData, Token } from './dto';
-import { ValidateEmailDto } from './dto/validate-token.dto';
+import { ValidateTokenDto } from './dto/validate-token.dto';
 
 @Controller('api/auth')
 @ApiTags('auth')
@@ -65,22 +65,58 @@ export class AuthController {
 	@Post('validateEmail')
 	@ApiOkResponse({ description: 'Validate email token and send SMS code.' })
 	async validateEmailToken(
-		@Body() validateEmailDto: ValidateEmailDto
+		@Body() ValidateTokenDto: ValidateTokenDto
 	): Promise<{ isValid: boolean; token?: string; code?: string }> {
 		const isValid = await this.auth.validateEmailVerificationCode(
-			validateEmailDto.token,
-			validateEmailDto.code
+			ValidateTokenDto.token,
+			ValidateTokenDto.code
 		);
-		console.log('最终的判断结果', isValid);
-
 		if (isValid) {
 			const token = await this.auth.sendSMSVerificationCode(
-				validateEmailDto.phone
+				ValidateTokenDto.phone
 			);
 			return { isValid, token };
 		} else {
 			return { isValid: false };
 		}
+	}
+
+	@Public()
+	@Post('validateSMS')
+	@ApiOkResponse({ description: 'Validate sms token and send Register' })
+	async validateSMSToken(
+		@Body() ValidateToken: ValidateTokenDto
+	): Promise<{ isValid: boolean; token?: Token; code?: string }> {
+		const isValid = await this.auth.validateSMSVerificationCode(ValidateToken);
+
+		if (isValid) {
+			const userObj = await this.auth.getUserFromRedis(
+				`userRegistration:${ValidateToken.phone}`
+			);
+			const { firstName, lastName, email, password, country, phoneNumber } =
+				userObj;
+			const newUserObj: RegisterDto = {
+				firstName,
+				lastName,
+				username: lastName + firstName,
+				email,
+				password,
+				country,
+				phoneNumber
+			};
+			const token = await this.auth.register(newUserObj);
+			return { isValid, token };
+		} else {
+			return { isValid: false };
+		}
+	}
+
+	@Public()
+	@Post('testSMS')
+	@ApiOkResponse({ description: 'Validate sms token and send Register' })
+	async validateSMS(@Body() ValidateTokenDto: ValidateTokenDto) {
+		const res = await this.auth.validateSMSVerificationCode(ValidateTokenDto);
+		return res;
 	}
 
 	@Public()
