@@ -20,6 +20,14 @@ export class AuthController {
 	constructor(private readonly auth: AuthService) {}
 
 	@Public()
+	@Post('exchange-code-for-user')
+	@HttpCode(HttpStatus.OK)
+	async exchangeCodeForUserId(@Body() body: any): Promise<any> {
+		const code = body.code;
+		return await this.auth.exchangeCodeForUserId(code);
+	}
+
+	@Public()
 	@Get('test-redis')
 	async testRedis() {
 		return this.auth.testRedis();

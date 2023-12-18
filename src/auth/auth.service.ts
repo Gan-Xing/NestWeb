@@ -10,6 +10,7 @@ import { RedisService } from 'src/redis/redis.service';
 import { CaptchaService } from 'src/captcha/captcha.service';
 import { EmailService } from 'src/email/email.service';
 import { SmsService } from 'src/sms/sms.service';
+import { HttpService } from '@nestjs/axios';
 import { RegisterDto, SignUpFormData, Token, ValidateTokenDto } from './dto';
 
 @Injectable()
@@ -22,8 +23,30 @@ export class AuthService {
 		private readonly redisService: RedisService,
 		private readonly captchaService: CaptchaService,
 		private readonly emailService: EmailService,
-		private readonly smsService: SmsService
+		private readonly smsService: SmsService,
+		private readonly httpService: HttpService
 	) {}
+
+	async exchangeCodeForUserId(code: string): Promise<any> {
+		const appid = this.configService.get<string>('MINIPROGRAM_APPID');
+		const secret = this.configService.get<string>('MINIPROGRAM_SECRET');
+		const url = `https://api.weixin.qq.com/sns/jscode2session`;
+
+		try {
+			const response = await this.httpService.axiosRef.get(url, {
+				params: {
+					appid,
+					secret,
+					js_code: code,
+					grant_type: 'authorization_code'
+				}
+			});
+			return response.data;
+			// 这里返回的数据包含 openid 和 unionid（如果有）
+		} catch (error) {
+			throw new Error('Unable to fetch user info from WeChat');
+		}
+	}
 	// 测试 Redis 的方法
 	async testRedis(): Promise<void> {
 		// 使用默认客户端

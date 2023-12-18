@@ -12,9 +12,10 @@ import { JwtStrategy } from './jwt.strategy';
 import { CaptchaModule } from 'src/captcha/captcha.module';
 import { EmailModule } from 'src/email/email.module';
 import { SmsModule } from 'src/sms/sms.module';
-
+import { HttpModule } from '@nestjs/axios';
 @Module({
 	imports: [
+		HttpModule,
 		PrismaModule,
 		PassportModule,
 		ConfigModule,
