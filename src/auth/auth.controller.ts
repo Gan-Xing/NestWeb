@@ -20,6 +20,12 @@ export class AuthController {
 	constructor(private readonly auth: AuthService) {}
 
 	@Public()
+	@Get('wechat-miniprogram-qrcode')
+	async requestQRCode(): Promise<{ qrCodeData: Buffer }> {
+		return await this.auth.generateQRCode();
+	}
+
+	@Public()
 	@Post('exchange-code-for-user')
 	@HttpCode(HttpStatus.OK)
 	async exchangeCodeForUserId(@Body() body: any): Promise<any> {
