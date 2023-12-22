@@ -1,2 +1,2 @@
 export * from './redis.utils';
-export * from './random.utils';
+export * from './crypto.utils';

@@ -2,7 +2,7 @@
 import { Injectable } from '@nestjs/common';
 import * as nodemailer from 'nodemailer';
 import { RedisService } from 'src/redis/redis.service';
-import { MyRandom } from 'src/common/utils/random.utils';
+import { getRandomByte } from 'src/common';
 
 @Injectable()
 export class EmailService {
@@ -22,7 +22,7 @@ export class EmailService {
 	}
 
 	async sendEmailVerificationCode(email: string): Promise<string> {
-		const emailVerificationCode = MyRandom.hex();
+		const emailVerificationCode = getRandomByte(3);
 		const expirationTime = 15; // 验证码有效期，单位为分钟
 
 		const htmlContent = `
@@ -50,7 +50,7 @@ export class EmailService {
 
 		// 可选：保存验证码到 Redis 或数据库
 
-		const token = `emailVerification:${email}_${MyRandom.hex(8)}`;
+		const token = `emailVerification:${email}_${getRandomByte(8)}`;
 		console.log(
 			'token, emailVerificationCode, expirationTime * 60',
 			token,

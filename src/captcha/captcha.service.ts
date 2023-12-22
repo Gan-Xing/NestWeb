@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import * as svgCaptcha from 'svg-captcha';
 import { RedisService } from 'src/redis/redis.service';
-import { MyRandom } from 'src/common';
+import { getRandomByte } from 'src/common';
 
 @Injectable()
 export class CaptchaService {
@@ -9,7 +9,7 @@ export class CaptchaService {
 
 	async createCaptcha() {
 		const captcha = svgCaptcha.create();
-		const token = `captcha_${Date.now()}_${MyRandom.hex(8)}`;
+		const token = `captcha_${Date.now()}_${getRandomByte(8)}`;
 		await this.redisService.set(token, captcha.text, 300);
 		return { image: captcha.data, token };
 	}
