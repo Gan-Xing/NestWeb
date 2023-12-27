@@ -24,6 +24,6 @@ jobs:
 
                               - name: Merge and Push to GitLab
                                 run: |
-                                          git remote add gitlab https://oauth2:${{ secrets.GITLAB_TOKEN }}@gitlab.ganxing.fun/root/NextWeb.git
+                                          git remote add gitlab https://oauth2:${{ secrets.GITLAB_TOKEN }}@gitlab.ganxing.fun/root/NestWeb.git
                                           git pull --rebase gitlab main
                                           git push gitlab main
