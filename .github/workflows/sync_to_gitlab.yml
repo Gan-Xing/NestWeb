@@ -1,0 +1,29 @@
+name: Sync to GitLab
+
+on:
+          push:
+                    branches:
+                              - main # 仅在 main 分支上触发
+
+jobs:
+          sync:
+                    runs-on: ubuntu-latest
+                    steps:
+                              - name: Checkout
+                                uses: actions/checkout@v4
+                                with:
+                                          ref: main # 检出 main 分支的代码
+                                          persist-credentials: false # 不保留认证令牌
+                                          fetch-depth: 0 # 获取所有历史
+
+                              - name: Configure Git
+                                run: |
+                                          git config --global user.name 'GanXing'
+                                          git config --global user.email '599153574@qq.com'
+                                          git config pull.rebase true
+
+                              - name: Merge and Push to GitLab
+                                run: |
+                                          git remote add gitlab https://oauth2:${{ secrets.GITLAB_TOKEN }}@gitlab.ganxing.fun/root/NextWeb.git
+                                          git pull --rebase gitlab main
+                                          git push gitlab main
