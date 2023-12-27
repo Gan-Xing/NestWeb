@@ -25,6 +25,7 @@ import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { CaptchaModule } from './captcha/captcha.module';
 import { EmailModule } from './email/email.module';
 import { SmsModule } from './sms/sms.module';
+import { WechatModule } from './wechat/wechat.module';
 
 @Module({
 	imports: [
@@ -54,7 +55,8 @@ import { SmsModule } from './sms/sms.module';
 		}),
 		CaptchaModule,
 		EmailModule,
-		SmsModule
+		SmsModule,
+		WechatModule
 	],
 	controllers: [AppController],
 	providers: [

@@ -10,6 +10,7 @@ import { RedisService } from 'src/redis/redis.service';
 import { CaptchaService } from 'src/captcha/captcha.service';
 import { EmailService } from 'src/email/email.service';
 import { SmsService } from 'src/sms/sms.service';
+import { WechatService } from 'src/wechat/wechat.service';
 import { HttpService } from '@nestjs/axios';
 import { RegisterDto, SignUpFormData, Token, ValidateTokenDto } from './dto';
 
@@ -24,59 +25,58 @@ export class AuthService {
 		private readonly captchaService: CaptchaService,
 		private readonly emailService: EmailService,
 		private readonly smsService: SmsService,
+		private readonly wechatService: WechatService,
 		private readonly httpService: HttpService
 	) {}
 
 	async generateQRCode(): Promise<{ qrCodeData: Buffer }> {
 		const scene = getRandomByte(16); // 生成16字节长度的随机scene
-		await this.redisService.set(scene, scene, 300); // 存储在Redis中，5分钟过期
 
+		await this.redisService.set(scene, scene, 300); // 存储在Redis中，5分钟过期
 		try {
-			const qrCodeData = await this.requestWeChatQRCode(scene); // 请求微信接口获取二维码
+			const qrCodeData = await this.getMiniProgramQRCode(scene); // 请求微信接口获取二维码
 			return { qrCodeData }; // 返回二维码的二进制数据
 		} catch (error) {
 			throw new Error('Error generating QR code');
 		}
 	}
 
-	async getAccessToken(): Promise<string> {
+	async getMiniProgramAccessToken(): Promise<string> {
 		const existingToken = await this.redisService.get(
 			'wechat_miniprogram_access_token'
 		);
 		if (existingToken) return existingToken;
 
-		const appid = this.configService.get<string>('MINIPROGRAM_APPID');
-		const secret = this.configService.get<string>('MINIPROGRAM_SECRET');
-		const url = `https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=${appid}&secret=${secret}`;
-
 		try {
-			const response = await this.httpService.axiosRef.get(url);
-			const accessToken = response.data.access_token;
+			const response = await this.wechatService.getMiniProgramAccessToken();
+			const { access_token, expires_in } = response.data;
 			await this.redisService.set(
 				'wechat_miniprogram_access_token',
-				accessToken,
-				7000
-			); // 过期时间设置为7000秒
-			return accessToken;
+				access_token,
+				expires_in
+			);
+			return access_token;
 		} catch (error) {
 			throw new Error('Unable to fetch access token from WeChat');
 		}
 	}
 
-	async requestWeChatQRCode(scene: string): Promise<Buffer> {
-		const accessToken = await this.getAccessToken();
-		const url = `https://api.weixin.qq.com/wxa/getwxacodeunlimit?access_token=${accessToken}`;
-
+	async getMiniProgramQRCode(scene: string): Promise<Buffer> {
+		const accessToken = await this.getMiniProgramAccessToken();
 		const params = {
-			scene,
-			page: 'pages/index/index' // 您希望二维码跳转的小程序页面
-			// 其他参数如 width, auto_color 等根据需要添加
+			scene: scene,
+			env_version: 'develop'
 		};
 
 		try {
-			const response = await this.httpService.axiosRef.post(url, params, {
-				responseType: 'arraybuffer' // 确保返回的是二进制数据
-			});
+			const response =
+				await this.wechatService.getUnlimitedMiniProgramiQRCode(
+					params,
+					accessToken,
+					{
+						responseType: 'arraybuffer' // 确保返回的是二进制数据
+					}
+				);
 			return response.data;
 		} catch (error) {
 			throw new Error('Unable to fetch QR code from WeChat');
@@ -116,7 +116,7 @@ export class AuthService {
 		// console.log(`Value from secondary client: ${value2}`);
 		// return this.redisClient.get('testKey');
 	}
-	
+
 	async validateCaptcha(signupData: SignUpFormData): Promise<{ isValid: boolean }> {
 		const { captchaToken, captcha, phoneNumber } = signupData;
 

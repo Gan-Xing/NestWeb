@@ -11,6 +11,7 @@ async function generatePackageFiles() {
     // 再次创建 package.json 的深拷贝，并修改 @ganxing/utils 的版本
     const packageTurbodev = JSON.parse(JSON.stringify(packageJson));
     packageTurbodev.dependencies["@ganxing/utils"] = "workspace:^";
+     packageTurbodev.dependencies["@ganxing/wechat"] = "workspace:^";
     delete packageTurbodev.devDependencies;
 
     // 异步写入到文件
