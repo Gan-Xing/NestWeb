@@ -30,7 +30,7 @@
     "@alicloud/tea-util": "^1.4.7",
     "@faker-js/faker": "^8.0.2",
     "@ganxing/utils": "^0.0.4",
-    "@ganxing/wechat": "^0.0.1",
+    "@ganxing/wechat": "^0.0.2",
     "@nestjs/axios": "^3.0.1",
     "@nestjs/common": "^10.0.0",
     "@nestjs/config": "^3.0.0",
