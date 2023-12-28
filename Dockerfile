@@ -11,6 +11,9 @@ RUN npm install -g pnpm && pnpm install
 # 拷贝应用代码
 COPY . .
 
+# 在执行 Prisma 命令前检查 DATABASE_URL 环境变量
+RUN if [ -z "$DATABASE_URL" ]; then echo "DATABASE_URL not set"; exit 1; fi
+
 # 生成 Prisma 客户端和运行迁移
 RUN npx prisma generate
 RUN npx prisma migrate deploy
