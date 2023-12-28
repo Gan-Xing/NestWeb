@@ -5,19 +5,32 @@ services:
                     container_name: server
                     build:
                               context: .
+                              args:
+                                        DATABASE_URL: ${DATABASE_URL}
+                                        REDIS_HOST_DEFAULT: ${REDIS_HOST_DEFAULT}
+                                        REDIS_PORT_DEFAULT: ${REDIS_PORT_DEFAULT}
+                                        MAIL_HOST: ${MAIL_HOST}
+                                        MAIL_PORT: ${MAIL_PORT}
+                                        MAIL_USER: ${MAIL_USER}
+                                        MAIL_PASSWORD: ${MAIL_PASSWORD}
+                                        MAIL_FROM: ${MAIL_FROM}
+                                        ALIBABA_CLOUD_ACCESS_KEY_ID: ${ALIBABA_CLOUD_ACCESS_KEY_ID}
+                                        ALIBABA_CLOUD_ACCESS_KEY_SECRET: ${ALIBABA_CLOUD_ACCESS_KEY_SECRET}
+                                        MINIPROGRAM_APPID: ${MINIPROGRAM_APPID}
+                                        MINIPROGRAM_SECRET: ${MINIPROGRAM_SECRET}
                     ports:
                               - '3030:3030'
                     environment:
-                              - DATABASE_URL=${DATABASE_URL}
-                              - REDIS_HOST_DEFAULT=${REDIS_HOST_DEFAULT}
-                              - REDIS_PORT_DEFAULT=${REDIS_PORT_DEFAULT}
-                              - MAIL_HOST=${MAIL_HOST}
-                              - MAIL_PORT=${MAIL_PORT}
-                              - MAIL_USER=${MAIL_USER}
-                              - MAIL_PASSWORD=${MAIL_PASSWORD}
-                              - MAIL_FROM=${MAIL_FROM}
-                              - ALIBABA_CLOUD_ACCESS_KEY_ID=${ALIBABA_CLOUD_ACCESS_KEY_ID}
-                              - ALIBABA_CLOUD_ACCESS_KEY_SECRET=${ALIBABA_CLOUD_ACCESS_KEY_SECRET}
-                              - MINIPROGRAM_APPID=${MINIPROGRAM_APPID}
-                              - MINIPROGRAM_SECRET=${MINIPROGRAM_SECRET}
+                              DATABASE_URL: ${DATABASE_URL}
+                              REDIS_HOST_DEFAULT: ${REDIS_HOST_DEFAULT}
+                              REDIS_PORT_DEFAULT: ${REDIS_PORT_DEFAULT}
+                              MAIL_HOST: ${MAIL_HOST}
+                              MAIL_PORT: ${MAIL_PORT}
+                              MAIL_USER: ${MAIL_USER}
+                              MAIL_PASSWORD: ${MAIL_PASSWORD}
+                              MAIL_FROM: ${MAIL_FROM}
+                              ALIBABA_CLOUD_ACCESS_KEY_ID: ${ALIBABA_CLOUD_ACCESS_KEY_ID}
+                              ALIBABA_CLOUD_ACCESS_KEY_SECRET: ${ALIBABA_CLOUD_ACCESS_KEY_SECRET}
+                              MINIPROGRAM_APPID: ${MINIPROGRAM_APPID}
+                              MINIPROGRAM_SECRET: ${MINIPROGRAM_SECRET}
                     restart: always

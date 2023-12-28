@@ -1,6 +1,9 @@
 # 使用官方 Node.js 18 图像作为基础图像
 FROM node:18
 
+# 定义构建时的变量
+ARG DATABASE_URL
+
 # 创建应用程序目录
 WORKDIR /usr/src/app
 
@@ -25,4 +28,4 @@ RUN pnpm run build
 EXPOSE 3030
 
 # 设置启动命令
-CMD [ "pnpm", "run", "start:prod" ]
+CMD ["pnpm", "run", "start:prod"]
