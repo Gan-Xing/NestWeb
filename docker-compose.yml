@@ -7,6 +7,7 @@ services:
                               context: .
                               args:
                                         DATABASE_URL: ${DATABASE_URL}
+                                        REDIS_CLIENTS: ${REDIS_CLIENTS}
                                         REDIS_HOST_DEFAULT: ${REDIS_HOST_DEFAULT}
                                         REDIS_PORT_DEFAULT: ${REDIS_PORT_DEFAULT}
                                         MAIL_HOST: ${MAIL_HOST}
@@ -22,6 +23,7 @@ services:
                               - '3030:3030'
                     environment:
                               DATABASE_URL: ${DATABASE_URL}
+                              REDIS_CLIENTS: ${REDIS_CLIENTS}
                               REDIS_HOST_DEFAULT: ${REDIS_HOST_DEFAULT}
                               REDIS_PORT_DEFAULT: ${REDIS_PORT_DEFAULT}
                               MAIL_HOST: ${MAIL_HOST}
