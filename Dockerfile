@@ -8,7 +8,7 @@ ARG DATABASE_URL
 WORKDIR /usr/src/app
 
 # 安装应用程序依赖项
-COPY package.json pnpm-lock.yaml ./
+COPY package.json ./
 RUN npm install -g pnpm && pnpm install
 
 # 拷贝应用代码
