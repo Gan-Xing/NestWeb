@@ -58,4 +58,10 @@ export class UserEntity implements User {
 
 	@ApiProperty()
 	lastName: string;
+
+	@ApiProperty()
+	wechatId: string;
+
+	@ApiProperty()
+	miniWechatId: string;
 }

@@ -9,10 +9,9 @@ import {
 	ApiNotFoundResponse,
 	ApiCreatedResponse
 } from '@nestjs/swagger';
-import { Public } from 'src/common';
+import { Public, RegisterDto, Token } from 'src/common';
 import { AuthService } from './auth.service';
-import { LoginDto, RefreshTokenDto, RegisterDto, SignUpFormData, Token } from './dto';
-import { ValidateTokenDto } from './dto/validate-token.dto';
+import { LoginDto, RefreshTokenDto, SignUpFormData, ValidateTokenDto } from './dto';
 
 @Controller('api/auth')
 @ApiTags('auth')
@@ -30,7 +29,20 @@ export class AuthController {
 	@HttpCode(HttpStatus.OK)
 	async exchangeCodeForUserId(@Body() body: any): Promise<any> {
 		const code = body.code;
+		const { openid, session_key, unionid } = await this.auth.exchangeCodeForUserId(
+			code
+		);
+
 		return await this.auth.exchangeCodeForUserId(code);
+	}
+
+	@Public()
+	@Post('miniprogram-login')
+	@HttpCode(HttpStatus.OK)
+	async miniprogramLogin(@Body() body: any): Promise<any> {
+		const code = body.code;
+		console.log('=============正在登录', code);
+		return await this.auth.miniprogramLogin(code);
 	}
 
 	@Public()
@@ -140,10 +152,13 @@ export class AuthController {
 	async register(@Body() createUserDto: RegisterDto) {
 		return this.auth.register(createUserDto);
 	}
+
+	@Public()
 	@Post('refresh')
 	@ApiBearerAuth()
-	@ApiCreatedResponse({ description: 'Refresh user token.' })
-	async refresh(@Body('refreshToken') { refreshToken }: RefreshTokenDto) {
-		return this.auth.refreshToken(refreshToken);
+	@ApiCreatedResponse({ type: Token, description: 'Refresh user token.' })
+	async refresh(@Body() token: RefreshTokenDto) {
+		console.log('refreshToken===============', token.refreshToken);
+		return this.auth.refreshToken(token.refreshToken);
 	}
 }

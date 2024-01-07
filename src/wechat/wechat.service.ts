@@ -2,7 +2,13 @@ import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { AxiosRequestConfig, AxiosResponse } from 'axios';
 
-import { AccessTokenResult, GetUnlimitedQRCode, MiniProgramService, WeChatModuleOptions } from '@ganxing/wechat';
+import {
+	AccessTokenResult,
+	GetUnlimitedQRCode,
+	MiniProgramService,
+	SessionResult,
+	WeChatModuleOptions
+} from '@ganxing/wechat';
 import { Params } from '@alicloud/openapi-client';
 
 @Injectable()
@@ -31,5 +37,13 @@ export class WechatService {
 			accessToken,
 			config
 		);
+	}
+
+	async getUnionIdByCode(
+		code: string,
+		appId?: string,
+		secret?: string
+	): Promise<SessionResult> {
+		return await this.miniProgramService.code2Session(code);
 	}
 }

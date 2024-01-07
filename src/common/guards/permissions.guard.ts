@@ -46,13 +46,6 @@ export class PermissionsGuard implements CanActivate {
 
     const hasPermission = permissions.every((permission) =>
       userPermissions.some((userPermission) => {
-        console.log(
-          '=================================1111',
-          userPermission,
-          '=================================2222',
-          permission,
-        );
-
         return (
           userPermission.action === permission.action &&
           userPermission.path === permission.path

@@ -3,6 +3,7 @@ import { ClassSerializerInterceptor, Module, ValidationPipe } from '@nestjs/comm
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import {
 	Config,
+	JwtAuthGuard,
 	PermissionsGuard,
 	LoggingInterceptor,
 	TransformInterceptor,
@@ -21,7 +22,6 @@ import { PermissionsModule } from 'src/permissions/permissions.module';
 import { PermissiongroupsModule } from 'src/permissiongroups/permissiongroups.module';
 import { MenusModule } from 'src/menus/menus.module';
 import { RedisModule } from 'src/redis/redis.module';
-import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { CaptchaModule } from './captcha/captcha.module';
 import { EmailModule } from './email/email.module';
 import { SmsModule } from './sms/sms.module';

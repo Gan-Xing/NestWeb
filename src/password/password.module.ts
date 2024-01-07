@@ -3,6 +3,6 @@ import { PasswordService } from './password.service';
 
 @Module({
   providers: [PasswordService],
-  exports: [PasswordService], // 在这里导出PasswordService
+  exports: [PasswordService],
 })
 export class PasswordModule {}

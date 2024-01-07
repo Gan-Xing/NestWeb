@@ -1,19 +1,20 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { PassportModule } from '@nestjs/passport';
 import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { JwtConfig, SecurityConfig } from 'src/common';
+import { JwtConfig, SecurityConfig, JwtStrategy } from 'src/common';
 import { PrismaModule } from 'src/prisma/prisma.module';
 import { PasswordModule } from 'src/password/password.module';
 import { PasswordService } from 'src/password/password.service';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
-import { JwtStrategy } from './jwt.strategy';
 import { CaptchaModule } from 'src/captcha/captcha.module';
 import { EmailModule } from 'src/email/email.module';
 import { SmsModule } from 'src/sms/sms.module';
 import { WechatModule } from 'src/wechat/wechat.module';
+import { UsersModule } from 'src/users/users.module';
 import { HttpModule } from '@nestjs/axios';
+
 @Module({
 	imports: [
 		HttpModule,
@@ -25,6 +26,7 @@ import { HttpModule } from '@nestjs/axios';
 		EmailModule,
 		SmsModule,
 		WechatModule,
+		forwardRef(() => UsersModule),
 		JwtModule.registerAsync({
 			useFactory: async (configService: ConfigService) => {
 				const securityConfig =
