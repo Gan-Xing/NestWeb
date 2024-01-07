@@ -45,17 +45,19 @@ model User {
   firstName    String? 
   lastName     String?
   phoneNumber  String?   @unique 
-  email        String    @unique
-  password     String
+  email        String?   @unique
+  password     String?
   createdAt    DateTime  @default(now())
   status       String?    
-  username     String
+  username     String?
   gender       String?    
   departmentId Int?
   updatedAt    DateTime  @updatedAt
   hashedRt     String?
   isAdmin      Boolean   @default(false)
   avatar       String?
+  wechatId     String?   @unique
+  miniWechatId String?      
   articles     Article[]
   roles        Role[]    @relation("UserRoles")
 }
