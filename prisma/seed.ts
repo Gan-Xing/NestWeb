@@ -37,33 +37,95 @@ async function createRoles() {
 }
 
 async function createPermissionGroups() {
-  for (let i = 0; i < 10; i++) {
-    await prisma.permissionGroup.create({
-      data: {
-        name: faker.commerce.department(),
-      },
-    });
-  }
+  // 创建权限管理顶级菜单
+  const authGroup = await prisma.permissionGroup.create({
+    data: {
+      name: '权限管理',
+      path: '/auth',
+    },
+  });
+
+  // 创建子菜单
+  await prisma.permissionGroup.create({
+    data: {
+      name: '用户管理',
+      path: '/auth/users',
+      parentId: authGroup.id,
+    },
+  });
+
+  await prisma.permissionGroup.create({
+    data: {
+      name: '角色管理',
+      path: '/auth/roles',
+      parentId: authGroup.id,
+    },
+  });
+
+  await prisma.permissionGroup.create({
+    data: {
+      name: '权限管理',
+      path: '/auth/permissions',
+      parentId: authGroup.id,
+    },
+  });
+
+  await prisma.permissionGroup.create({
+    data: {
+      name: '菜单管理',
+      path: '/auth/menus',
+      parentId: authGroup.id,
+    },
+  });
 }
 
 async function createPermissions() {
-  const groups = await prisma.permissionGroup.findMany();
+  const groups = await prisma.permissionGroup.findMany({
+    where: {
+      path: {
+        startsWith: '/auth/',
+      },
+    },
+  });
   const roles = await prisma.role.findMany();
 
-  for (let i = 0; i < 10; i++) {
-    await prisma.permission.create({
-      data: {
-        name: faker.lorem.word(),
-        action: faker.lorem.word(),
-        path: faker.internet.url(),
-        permissionGroupId: groups[Math.floor(Math.random() * groups.length)].id,
-        roles: {
-          connect: roles
-            .slice(0, Math.floor(Math.random() * roles.length + 1))
-            .map((role) => ({ id: role.id })),
-        },
+  // 为每个权限组创建对应的权限
+  for (const group of groups) {
+    const basePath = group.path.replace('/auth/', '');
+    const permissions = [
+      {
+        name: `查看${group.name.replace('管理', '')}`,
+        action: 'GET',
+        path: `/${basePath}`,
       },
-    });
+      {
+        name: `新增${group.name.replace('管理', '')}`,
+        action: 'POST',
+        path: `/${basePath}`,
+      },
+      {
+        name: `编辑${group.name.replace('管理', '')}`,
+        action: 'PUT',
+        path: `/${basePath}/:id`,
+      },
+      {
+        name: `删除${group.name.replace('管理', '')}`,
+        action: 'DELETE',
+        path: `/${basePath}`,
+      }
+    ];
+
+    for (const perm of permissions) {
+      await prisma.permission.create({
+        data: {
+          ...perm,
+          permissionGroupId: group.id,
+          roles: {
+            connect: roles.map((role) => ({ id: role.id })),
+          },
+        },
+      });
+    }
   }
 }
 
@@ -115,7 +177,7 @@ async function createUsers() {
         gender: faker.helpers.arrayElement(['Male', 'Female', 'Other']),
         departmentId: Math.floor(Math.random() * 10) + 1,
         isAdmin: faker.datatype.boolean(),
-        avatar: faker.internet.avatar(),
+        avatar: faker.image.avatar(),
         roles: {
           connect: roles
             .slice(0, Math.floor(Math.random() * roles.length + 1))
@@ -149,4 +211,4 @@ main()
   })
   .finally(async () => {
     await prisma.$disconnect();
-  });
+  }); 
