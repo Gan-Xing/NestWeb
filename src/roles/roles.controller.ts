@@ -64,7 +64,7 @@ export class RolesController {
   @Patch(':id')
   @ApiBearerAuth()
   @ApiCreatedResponse({ description: 'Update a role by id.', type: RoleEntity })
-  @Permissions(new PermissionEntity({ action: 'Patch', path: '/roles' }))
+  @Permissions(new PermissionEntity({ action: 'PATCH', path: '/roles' }))
   async update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateRoleDto: UpdateRoleDto,

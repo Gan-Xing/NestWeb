@@ -26,6 +26,8 @@ import { CaptchaModule } from './captcha/captcha.module';
 import { EmailModule } from './email/email.module';
 import { SmsModule } from './sms/sms.module';
 import { WechatModule } from './wechat/wechat.module';
+import { StorageModule } from './storage/storage.module';
+import { PhotoLogsModule } from './photo-logs/photo-logs.module';
 
 @Module({
 	imports: [
@@ -38,6 +40,8 @@ import { WechatModule } from './wechat/wechat.module';
 		PermissionsModule,
 		PermissiongroupsModule,
 		MenusModule,
+		StorageModule,
+		PhotoLogsModule,
 		ConfigModule.forRoot({
 			isGlobal: true,
 			load: [Config]

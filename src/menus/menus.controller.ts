@@ -16,9 +16,10 @@ import { CreateMenuDto, UpdateMenuDto } from './dto';
 import { ApiBearerAuth, ApiOkResponse, ApiTags } from '@nestjs/swagger';
 import { Permissions } from 'src/common';
 import { PermissionEntity } from 'src/permissions/entities';
+import { CurrentUser } from 'src/common';
 
 @Controller('api/menus')
-@ApiTags('menus')
+@ApiTags('菜单管理')
 export class MenusController {
   constructor(private readonly menusService: MenusService) {}
 
@@ -33,18 +34,23 @@ export class MenusController {
   @ApiBearerAuth()
   @Permissions(new PermissionEntity({ action: 'GET', path: '/menus' }))
   async findAllPaged(
-    @Query('current', new ParseIntPipe()) current: number,
-    @Query('pageSize', new ParseIntPipe()) pageSize: number,
+    @Query('pageSize') pageSize?: string,  // 移除 ParseIntPipe
+    @Query('current') current?: string,    // 移除 ParseIntPipe
     @Query('name') name?: string,
   ) {
-    return await this.menusService.findAllPaged(current, pageSize, name);
+    
+    // 转换为数字类型并提供默认值
+    const size = pageSize ? parseInt(pageSize, 10) : 10;
+    const currentPage = current ? parseInt(current, 10) : 1;
+    
+    return await this.menusService.findAllPaged(currentPage, size, name);
   }
 
-  @Get('/user')
+  @Get('user')
   @ApiBearerAuth()
-  async findMenuByUser(@Req() req) {
-    const userId = req.user.id;
-    return await this.menusService.findMenuByUser(userId);
+  @Permissions(new PermissionEntity({ action: 'GET', path: '/menus' }))
+  findUserMenus(@CurrentUser('id') userId: number) {
+    return this.menusService.findMenuByUser(userId);
   }
 
   @Get(':id')
@@ -56,7 +62,7 @@ export class MenusController {
 
   @Patch(':id')
   @ApiBearerAuth()
-  @Permissions(new PermissionEntity({ action: 'Patch', path: '/menus' }))
+  @Permissions(new PermissionEntity({ action: 'PATCH', path: '/menus' }))
   update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateMenuDto: UpdateMenuDto,

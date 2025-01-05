@@ -17,15 +17,17 @@ model Role {
 }
 
 model Permission {
-  id                Int             @id @default(autoincrement())
-  name              String
-  action            String
-  path              String
-  createdAt         DateTime        @default(now())
-  updatedAt         DateTime        @updatedAt
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  name      String
+  action    String
+  path      String
   permissionGroupId Int
   permissionGroup   PermissionGroup @relation(fields: [permissionGroupId], references: [id])
-  roles             Role[]          @relation("PermissionToRole")
+  roles     Role[]   @relation("PermissionToRole")
+
+  @@map("permissions")
 }
 
 model PermissionGroup {
@@ -59,6 +61,7 @@ model User {
   wechatId     String?   @unique
   miniWechatId String?      
   articles     Article[]
+  photoLogs    PhotoLog[]
   roles        Role[]    @relation("UserRoles")
 }
 
@@ -72,4 +75,15 @@ model Article {
   updatedAt   DateTime @updatedAt
   authorId    Int?
   author      User?    @relation(fields: [authorId], references: [id])
+}
+
+model PhotoLog {
+  id          Int      @id @default(autoincrement())
+  description String
+  area        String
+  photos      String[] // 存储图片URL数组
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  createdById Int
+  createdBy   User     @relation(fields: [createdById], references: [id])
 }

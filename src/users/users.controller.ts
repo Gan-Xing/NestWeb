@@ -93,7 +93,7 @@ export class UsersController {
 	@Patch(':id')
 	@ApiBearerAuth()
 	@ApiCreatedResponse({ description: 'Update a user by id.', type: UserEntity })
-	@Permissions(new PermissionEntity({ action: 'Patch', path: '/users' }))
+	@Permissions(new PermissionEntity({ action: 'PATCH', path: '/users' }))
 	async update(
 		@Param('id', ParseIntPipe) id: number,
 		@Body() updateUserDto: UpdateUserDto

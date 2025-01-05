@@ -105,7 +105,7 @@ async function createPermissions() {
       },
       {
         name: `编辑${group.name.replace('管理', '')}`,
-        action: 'PUT',
+        action: 'PATCH',
         path: `/${basePath}/:id`,
       },
       {
@@ -133,7 +133,7 @@ async function createUsers() {
   const roles = await prisma.role.findMany();
 
   const hashedAdminPassword = await hash('admin123', 10);
-
+  
   const existingAdmin = await prisma.user.findUnique({
     where: { email: 'admin@example.com' },
   });
