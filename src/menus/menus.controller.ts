@@ -10,11 +10,12 @@ import {
   ParseArrayPipe,
   Query,
   Req,
+  UseGuards,
 } from '@nestjs/common';
 import { MenusService } from './menus.service';
 import { CreateMenuDto, UpdateMenuDto } from './dto';
 import { ApiBearerAuth, ApiOkResponse, ApiTags } from '@nestjs/swagger';
-import { Permissions } from 'src/common';
+import { JwtAuthGuard, Permissions } from 'src/common';
 import { PermissionEntity } from 'src/permissions/entities';
 import { CurrentUser } from 'src/common';
 
@@ -48,7 +49,7 @@ export class MenusController {
 
   @Get('user')
   @ApiBearerAuth()
-  @Permissions(new PermissionEntity({ action: 'GET', path: '/menus' }))
+  @UseGuards(JwtAuthGuard)
   findUserMenus(@CurrentUser('id') userId: number) {
     return this.menusService.findMenuByUser(userId);
   }
