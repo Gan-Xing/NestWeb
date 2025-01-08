@@ -29,7 +29,7 @@ const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
 
 @ApiTags('照片日志管理')
-@Controller('photo-logs')
+@Controller('api/photo-logs')
 export class PhotoLogsController {
   constructor(
     private readonly photoLogsService: PhotoLogsService,
@@ -62,10 +62,17 @@ export class PhotoLogsController {
   findAll(
     @Query('current', ParseIntPipe) current: number,
     @Query('pageSize', ParseIntPipe) pageSize: number,
+    @Query() params: any,
     @CurrentUser('id') userId: number,
     @CurrentUser('isAdmin') isAdmin: boolean,
   ) {
-    return this.photoLogsService.findAll(current, pageSize, isAdmin);
+    const { description, area, createdBy } = params;
+    const searchParams = {
+      description,
+      area,
+      createdBy: createdBy ? JSON.parse(createdBy) : undefined,
+    };
+    return this.photoLogsService.findAll(current, pageSize, isAdmin, searchParams);
   }
 
   @Get(':id')
