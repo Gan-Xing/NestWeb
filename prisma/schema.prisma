@@ -50,16 +50,16 @@ model User {
   email        String?   @unique
   password     String?
   createdAt    DateTime  @default(now())
-  status       String?    
+  status       String?
   username     String?
-  gender       String?    
+  gender       String?
   departmentId Int?
   updatedAt    DateTime  @updatedAt
   hashedRt     String?
   isAdmin      Boolean   @default(false)
   avatar       String?
   wechatId     String?   @unique
-  miniWechatId String?      
+  miniWechatId String?
   articles     Article[]
   photoLogs    PhotoLog[]
   roles        Role[]    @relation("UserRoles")
@@ -81,7 +81,12 @@ model PhotoLog {
   id          Int      @id @default(autoincrement())
   description String
   area        String
-  photos      String[] // 存储图片URL数组
+  photos      String[]
+  location    Json?    // 存储GPS信息，包含 latitude 和 longitude
+  stakeNumber String?  // 桩号，可选
+  offset      Float?   // 偏距，可选
+  category    String   @default("安全") // 分类：安全、质量、进度
+  tags        String[] @default([])    // 标签数组
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   createdById Int

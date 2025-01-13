@@ -1,5 +1,4 @@
 import { PrismaClient } from '@prisma/client';
-import { fakerZH_CN as faker } from '@faker-js/faker';
 import { hash } from 'bcrypt';
 
 const prisma = new PrismaClient();
@@ -14,26 +13,16 @@ async function deleteAllData() {
 
 async function main() {
   await deleteAllData();
-  await createRoles();
-  await createPermissionGroups();
-  await createPermissions();
-  await createUsers();
-  await createArticles();
+  const adminRole = await createAdminRole();
+  const { authGroup, logsGroup } = await createPermissionGroups();
+  await createPermissions(adminRole, authGroup, logsGroup);
+  await createAdminUser(adminRole);
 }
 
-async function createRoles() {
-  for (let i = 0; i < 10; i++) {
-    const roleName = `role${i}`;
-    const existingRole = await prisma.role.findUnique({
-      where: { name: roleName },
-    });
-
-    if (!existingRole) {
-      await prisma.role.create({
-        data: { name: roleName },
-      });
-    }
-  }
+async function createAdminRole() {
+  return await prisma.role.create({
+    data: { name: 'admin' },
+  });
 }
 
 async function createPermissionGroups() {
@@ -45,7 +34,15 @@ async function createPermissionGroups() {
     },
   });
 
-  // 创建子菜单
+  // 创建日志管理顶级菜单
+  const logsGroup = await prisma.permissionGroup.create({
+    data: {
+      name: '日志管理',
+      path: '/logs',
+    },
+  });
+
+  // 创建权限管理子菜单
   await prisma.permissionGroup.create({
     data: {
       name: '用户管理',
@@ -77,9 +74,21 @@ async function createPermissionGroups() {
       parentId: authGroup.id,
     },
   });
+
+  // 创建图文日志子菜单
+  const photoLogsGroup = await prisma.permissionGroup.create({
+    data: {
+      name: '图文日志',
+      path: '/logs/photo-logs',
+      parentId: logsGroup.id,
+    },
+  });
+
+  return { authGroup, logsGroup, photoLogsGroup };
 }
 
-async function createPermissions() {
+async function createPermissions(adminRole: any, authGroup: any, logsGroup: any) {
+  // 创建权限管理相关权限
   const groups = await prisma.permissionGroup.findMany({
     where: {
       path: {
@@ -87,7 +96,6 @@ async function createPermissions() {
       },
     },
   });
-  const roles = await prisma.role.findMany();
 
   // 为每个权限组创建对应的权限
   for (const group of groups) {
@@ -121,87 +129,83 @@ async function createPermissions() {
           ...perm,
           permissionGroupId: group.id,
           roles: {
-            connect: roles.map((role) => ({ id: role.id })),
+            connect: [{ id: adminRole.id }],
           },
         },
       });
     }
   }
-}
 
-async function createUsers() {
-  const roles = await prisma.role.findMany();
-
-  const hashedAdminPassword = await hash('admin123', 10);
-  
-  const existingAdmin = await prisma.user.findUnique({
-    where: { email: 'admin@example.com' },
+  // 创建图文日志相关权限
+  const photoLogsGroup = await prisma.permissionGroup.findFirst({
+    where: {
+      path: '/logs/photo-logs',
+    },
   });
 
-  if (existingAdmin) {
-    await prisma.user.update({
-      where: { email: 'admin@example.com' },
-      data: {
-        password: hashedAdminPassword,
-        roles: {
-          connect: roles.map((role) => ({ id: role.id })),
-        },
-      },
-    });
-  } else {
-    await prisma.user.create({
-      data: {
-        email: 'admin@example.com',
-        password: hashedAdminPassword,
-        username: 'admin',
-        gender: 'Male',
-        departmentId: 1,
-        isAdmin: true,
-        avatar: 'https://gravatar.com/avatar/0000?d=mp&f=y',
-        roles: {
-          connect: roles.map((role) => ({ id: role.id })),
-        },
-      },
-    });
-  }
+  const photoLogsPermissions = [
+    {
+      name: '上传图文日志图片',
+      action: 'POST',
+      path: '/photo-logs/upload',
+    },
+    {
+      name: '查看图文日志列表',
+      action: 'GET',
+      path: '/photo-logs',
+    },
+    {
+      name: '查看图文日志详情',
+      action: 'GET',
+      path: '/photo-logs/:id',
+    },
+    {
+      name: '新增图文日志',
+      action: 'POST',
+      path: '/photo-logs',
+    },
+    {
+      name: '更新图文日志',
+      action: 'PATCH',
+      path: '/photo-logs/:id',
+    },
+    {
+      name: '删除图文日志',
+      action: 'DELETE',
+      path: '/photo-logs/:id',
+    }
+  ];
 
-  for (let i = 0; i < 100; i++) {
-    const plainPassword = faker.internet.password();
-    const hashedPassword = await hash(plainPassword, 10);
-
-    await prisma.user.create({
+  for (const perm of photoLogsPermissions) {
+    await prisma.permission.create({
       data: {
-        email: faker.internet.email(),
-        password: hashedPassword,
-        username: faker.internet.userName(),
-        gender: faker.helpers.arrayElement(['Male', 'Female', 'Other']),
-        departmentId: Math.floor(Math.random() * 10) + 1,
-        isAdmin: faker.datatype.boolean(),
-        avatar: faker.image.avatar(),
+        ...perm,
+        permissionGroupId: photoLogsGroup!.id,
         roles: {
-          connect: roles
-            .slice(0, Math.floor(Math.random() * roles.length + 1))
-            .map((role) => ({ id: role.id })),
+          connect: [{ id: adminRole.id }],
         },
       },
     });
   }
 }
 
-async function createArticles() {
-  const users = await prisma.user.findMany();
-
-  for (let i = 0; i < 10; i++) {
-    await prisma.article.create({
-      data: {
-        title: faker.lorem.words(5),
-        description: faker.lorem.sentences(3),
-        body: faker.lorem.paragraphs(3),
-        published: faker.datatype.boolean(),
-        authorId: users[Math.floor(Math.random() * users.length)].id,
+async function createAdminUser(adminRole: any) {
+  const hashedAdminPassword = await hash('admin123', 10);
+  
+  await prisma.user.create({
+    data: {
+      email: 'admin@example.com',
+      password: hashedAdminPassword,
+      username: 'admin',
+      gender: 'Male',
+      departmentId: 1,
+      isAdmin: true,
+      avatar: 'https://gravatar.com/avatar/0000?d=mp&f=y',
+      roles: {
+        connect: [{ id: adminRole.id }],
       },
-    });
-  }
+    },
+  });
 }
 
 main()

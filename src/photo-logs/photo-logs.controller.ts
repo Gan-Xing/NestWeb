@@ -13,23 +13,33 @@ import {
   BadRequestException,
   PayloadTooLargeException,
   Query,
+  UseGuards,
 } from '@nestjs/common';
 import { FilesInterceptor, FileInterceptor } from '@nestjs/platform-express';
-import { ApiTags, ApiOperation, ApiConsumes, ApiBody, ApiBearerAuth } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiConsumes, ApiBody, ApiBearerAuth, ApiOkResponse, ApiResponse } from '@nestjs/swagger';
 import { PhotoLogsService } from './photo-logs.service';
-import { CreatePhotoLogDto } from './dto/create-photo-log.dto';
+import { CreatePhotoLogDto, PhotoLogCategory } from './dto/create-photo-log.dto';
 import { UpdatePhotoLogDto } from './dto/update-photo-log.dto';
-import { CurrentUser, Permissions } from 'src/common';
+import { CurrentUser, Permissions, JwtAuthGuard } from 'src/common';
 import { Inject } from '@nestjs/common';
 import { IStorageService } from 'src/storage/storage.interface';
 import { extname } from 'path';
 import { PermissionEntity } from 'src/permissions/entities';
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
-const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+const ALLOWED_IMAGE_TYPES = [
+  'image/jpeg',
+  'image/png',
+  'image/gif',
+  'image/webp',
+  'image/heic',
+  'image/heif'
+];
 
 @ApiTags('照片日志管理')
 @Controller('api/photo-logs')
+@UseGuards(JwtAuthGuard)
+@ApiBearerAuth()
 export class PhotoLogsController {
   constructor(
     private readonly photoLogsService: PhotoLogsService,
@@ -39,11 +49,42 @@ export class PhotoLogsController {
 
   @Post('upload')
   @UseInterceptors(FileInterceptor('file'))
-  @ApiBearerAuth()
   @Permissions(new PermissionEntity({ action: 'POST', path: '/photo-logs/upload' }))
+  @ApiOperation({ summary: '上传图片' })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        file: {
+          type: 'string',
+          format: 'binary',
+        },
+      },
+    },
+  })
   async uploadFile(@UploadedFile() file: Express.Multer.File) {
+    if (!file) {
+      throw new BadRequestException('未找到上传的文件');
+    }
+
+    if (!ALLOWED_IMAGE_TYPES.includes(file.mimetype)) {
+      throw new BadRequestException('不支持的文件类型');
+    }
+
+    if (file.size > MAX_FILE_SIZE) {
+      throw new PayloadTooLargeException('文件大小超过限制');
+    }
+
     const result = await this.storageService.uploadFile(file);
-    return result;
+    return {
+      success: true,
+      data: {
+        url: result.url,
+        path: result.path,
+        location: result.location,
+      },
+    };
   }
 
   @Post()
@@ -58,23 +99,66 @@ export class PhotoLogsController {
 
   @Get()
   @ApiBearerAuth()
+  @ApiOkResponse({ description: '获取图文日志列表' })
   @Permissions(new PermissionEntity({ action: 'GET', path: '/photo-logs' }))
-  findAll(
-    @Query('current', ParseIntPipe) current: number,
-    @Query('pageSize', ParseIntPipe) pageSize: number,
-    @Query() params: any,
-    @CurrentUser('id') userId: number,
+  async findAll(
     @CurrentUser('isAdmin') isAdmin: boolean,
+    @Query('current') current: string = '1',
+    @Query('pageSize') pageSize: string = '10',
+    @Query('description') description?: string,
+    @Query('area') area?: string,
+    @Query('category') category?: PhotoLogCategory,
+    @Query('stakeNumber') stakeNumber?: string,
+    @Query('tags') tags?: string[],
+    @Query('createdBy') createdByStr?: string,
+    @Query('startDate') startDate?: string,
+    @Query('endDate') endDate?: string,
   ) {
-    const { description, area, createdBy } = params;
-    const searchParams = {
-      description,
-      area,
-      createdBy: createdBy ? JSON.parse(createdBy) : undefined,
-    };
-    return this.photoLogsService.findAll(current, pageSize, isAdmin, searchParams);
-  }
+    let createdBy = undefined;
+    if (createdByStr) {
+      try {
+        createdBy = JSON.parse(createdByStr);
+      } catch (err) {
+        console.warn('JSON.parse(createdByStr) 失败：', err);
+      }
+    }
 
+    const result = await this.photoLogsService.findAll(
+      Number(current),
+      Number(pageSize),
+      isAdmin,
+      {
+        description,
+        area,
+        category,
+        stakeNumber,
+        tags: tags || [],
+        createdBy,
+        startDate,
+        endDate,
+      },
+    );
+
+    const processedData = await Promise.all(
+      result.data.map(async (item) => ({
+        ...item,
+        photos: await Promise.all(
+          item.photos.map(async (photo) => {
+            if (photo.startsWith('http://') || photo.startsWith('https://')) {
+              return photo;
+            }
+            const presignedUrl = await this.storageService.getPresignedUrl(photo);
+            return presignedUrl;
+          })
+        ),
+      }))
+    );
+
+    return {
+      ...result,
+      data: processedData,
+    };
+  }
   @Get(':id')
   @ApiBearerAuth()
   @Permissions(new PermissionEntity({ action: 'GET', path: '/photo-logs/:id' }))
@@ -108,4 +192,5 @@ export class PhotoLogsController {
   ) {
     return this.photoLogsService.remove(id, userId, isAdmin);
   }
+
 } 

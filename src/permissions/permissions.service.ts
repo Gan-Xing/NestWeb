@@ -36,7 +36,6 @@ export class PermissionsService {
     }
 
     const userPermissions = user.roles.flatMap((role) => role.permissions);
-    console.log("userPermissions,",userPermissions,"requiredPermissions",requiredPermissions);
 
     return requiredPermissions.every((permission) =>
       userPermissions.some(

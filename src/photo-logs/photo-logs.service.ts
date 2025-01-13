@@ -1,10 +1,11 @@
 import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
-import { CreatePhotoLogDto } from './dto/create-photo-log.dto';
+import { CreatePhotoLogDto, PhotoLogCategory } from './dto/create-photo-log.dto';
 import { UpdatePhotoLogDto } from './dto/update-photo-log.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { ConfigService } from '@nestjs/config';
 import { Inject } from '@nestjs/common';
 import { IStorageService } from 'src/storage/storage.interface';
+import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class PhotoLogsService {
@@ -16,11 +17,22 @@ export class PhotoLogsService {
   ) {}
 
   async create(createPhotoLogDto: CreatePhotoLogDto, userId: number) {
+    const { description, area, photos, location, stakeNumber, offset, category, tags } = createPhotoLogDto;
+    
+    const data = {
+      description,
+      area,
+      photos,
+      location: location ? JSON.stringify(location) : undefined,
+      stakeNumber,
+      offset,
+      category: category || '进度',
+      tags: tags || [],
+      createdById: userId,
+    };
+
     return this.prisma.photoLog.create({
-      data: {
-        ...createPhotoLogDto,
-        createdById: userId,
-      },
+      data,
       include: {
         createdBy: {
           select: {
@@ -37,10 +49,55 @@ export class PhotoLogsService {
     current: number,
     pageSize: number,
     isAdmin: boolean,
-    params?: { description?: string; area?: string; createdBy?: { username?: string } }
+    params?: {
+      description?: string;
+      area?: string;
+      category?: PhotoLogCategory;
+      stakeNumber?: string;
+      tags?: string[];
+      createdBy?: { username?: string };
+      startDate?: string;
+      endDate?: string;
+    }
   ) {
-    const total = await this.prisma.photoLog.count();
+    const where: any = {};
+    
+    if (params?.description) {
+      where.description = { contains: params.description, mode: 'insensitive' };
+    }
+    if (params?.area) {
+      where.area = { contains: params.area, mode: 'insensitive' };
+    }
+    if (params?.category) {
+      where.category = params.category;
+    }
+    if (params?.stakeNumber) {
+      where.stakeNumber = { contains: params.stakeNumber, mode: 'insensitive' };
+    }
+    
+    if (params?.tags?.length) {
+      where.tags = { hasSome: params.tags };
+    }
+
+    if (params?.createdBy?.username) {
+      where.createdBy = {
+        username: { contains: params.createdBy.username, mode: 'insensitive' },
+      };
+    }
+
+    if (params?.startDate || params?.endDate) {
+      where.createdAt = {};
+      if (params.startDate) {
+        where.createdAt.gte = new Date(params.startDate);
+      }
+      if (params.endDate) {
+        where.createdAt.lte = new Date(params.endDate);
+      }
+    }
+
+    const total = await this.prisma.photoLog.count({ where });
     const data = await this.prisma.photoLog.findMany({
+      where,
       skip: (current - 1) * pageSize,
       take: pageSize,
       include: {
@@ -52,21 +109,24 @@ export class PhotoLogsService {
           },
         },
       },
+      orderBy: {
+        createdAt: 'desc',
+      },
     });
 
-    // 添加完整的图片URL
-    const baseUrl = this.configService.get('OSS_CDN_URL') || '';
-    const processedData = data.map(item => ({
-      ...item,
-      photos: item.photos.map(photo => {
-        // 如果photo已经是完整URL，则直接返回
-        if (photo.startsWith('http://') || photo.startsWith('https://')) {
-          return photo;
-        }
-        // 否则拼接baseUrl
-        return `${baseUrl}${photo}`;
-      }),
-    }));
+    const processedData = await Promise.all(
+      data.map(async (item) => ({
+        ...item,
+        photos: await Promise.all(
+          item.photos.map(async (photo) => {
+            if (photo.startsWith('http://') || photo.startsWith('https://')) {
+              return photo;
+            }
+            return await this.storageService.getPresignedUrl(photo);
+          })
+        ),
+      }))
+    );
 
     return {
       data: processedData,
@@ -96,16 +156,26 @@ export class PhotoLogsService {
       throw new NotFoundException('图文日志不存在');
     }
 
-    // 检查访问权限
     if (!isAdmin && photoLog.createdById !== userId) {
       throw new ForbiddenException('无权访问此图文日志');
     }
 
-    return photoLog;
+    const processedPhotos = await Promise.all(
+      photoLog.photos.map(async (photo) => {
+        if (photo.startsWith('http://') || photo.startsWith('https://')) {
+          return photo;
+        }
+        return await this.storageService.getPresignedUrl(photo);
+      })
+    );
+
+    return {
+      ...photoLog,
+      photos: processedPhotos,
+    };
   }
 
   async update(id: number, updatePhotoLogDto: UpdatePhotoLogDto, userId: number, isAdmin: boolean) {
-    // 检查日志是否存在
     const photoLog = await this.prisma.photoLog.findUnique({
       where: { id },
     });
@@ -114,14 +184,20 @@ export class PhotoLogsService {
       throw new NotFoundException('图文日志不存在');
     }
 
-    // 检查更新权限
     if (!isAdmin && photoLog.createdById !== userId) {
       throw new ForbiddenException('无权更新此图文日志');
     }
 
+    const { location, ...restDto } = updatePhotoLogDto;
+    
+    const data = {
+      ...restDto,
+      location: location ? JSON.stringify(location) : undefined,
+    };
+
     return this.prisma.photoLog.update({
       where: { id },
-      data: updatePhotoLogDto,
+      data,
       include: {
         createdBy: {
           select: {
@@ -135,7 +211,6 @@ export class PhotoLogsService {
   }
 
   async remove(id: number, userId: number, isAdmin: boolean) {
-    // 检查日志是否存在
     const photoLog = await this.prisma.photoLog.findUnique({
       where: { id },
     });
@@ -144,18 +219,18 @@ export class PhotoLogsService {
       throw new NotFoundException('图文日志不存在');
     }
 
-    // 检查删除权限
     if (!isAdmin && photoLog.createdById !== userId) {
       throw new ForbiddenException('无权删除此图文日志');
     }
 
-    // 删除关联的图片文件
     try {
+      const baseUrl = this.configService.get('OSS_CDN_URL') || '';
       await Promise.all(
         photoLog.photos.map(async (photo) => {
-          // 从URL中提取文件路径
-          const url = new URL(photo);
-          const path = url.pathname.split('/').pop();
+          let path = photo;
+          if (baseUrl && photo.startsWith(baseUrl)) {
+            path = photo.substring(baseUrl.length);
+          }
           if (path) {
             await this.storageService.deleteFile(path);
           }
@@ -163,7 +238,6 @@ export class PhotoLogsService {
       );
     } catch (error) {
       console.error('删除图片文件失败:', error);
-      // 即使删除图片失败，我们仍然继续删除数据库记录
     }
 
     return this.prisma.photoLog.delete({
