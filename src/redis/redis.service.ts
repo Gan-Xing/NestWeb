@@ -29,9 +29,17 @@ export class RedisService {
 		clientName: string = 'default'
 	): Promise<void> {
 		const client = this.getClient(clientName);
-		let data: string | Buffer = JSON.stringify(value);
+		let data: string | Buffer;
+		
+		// 如果value是字符串，直接使用，否则转换为JSON字符串
+		if (typeof value === 'string') {
+			data = value;
+		} else {
+			data = JSON.stringify(value);
+		}
+
 		if (compress) {
-			data = await gzipAsync(data); // data 保留为 Buffer 类型
+			data = await gzipAsync(data.toString());
 		}
 		if (expiry > 0) {
 			await client.set(key, data, 'EX', expiry);

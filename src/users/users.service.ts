@@ -87,7 +87,10 @@ export class UsersService {
 					connect: [{ id: defaultRole.id }] // 连接到默认角色
 				},
 				username: registerUser.username,
-				gender: 'Male'
+				gender: 'Male',
+				firstName: registerUser.firstName,
+				lastName: registerUser.lastName,
+				phoneNumber: registerUser.phoneNumber,
 			}
 		});
 	}

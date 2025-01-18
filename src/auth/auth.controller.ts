@@ -11,7 +11,7 @@ import {
 } from '@nestjs/swagger';
 import { Public, RegisterDto, Token } from 'src/common';
 import { AuthService } from './auth.service';
-import { LoginDto, RefreshTokenDto, SignUpFormData, ValidateTokenDto } from './dto';
+import { LoginDto, RefreshTokenDto, SignUpFormData, ValidateTokenDto,RegisterByEmailDto } from './dto';
 
 @Controller('api/auth')
 @ApiTags('auth')
@@ -158,7 +158,16 @@ export class AuthController {
 	@ApiBearerAuth()
 	@ApiCreatedResponse({ type: Token, description: 'Refresh user token.' })
 	async refresh(@Body() token: RefreshTokenDto) {
-		console.log('refreshToken===============', token.refreshToken);
 		return this.auth.refreshToken(token.refreshToken);
+	}
+
+	@Public()
+	@Post('registerByEmail')
+	@ApiOkResponse({
+		description: '验证邮箱验证码，若已存在用户则直接登录，否则创建新用户并登录',
+		type: Token,
+	})
+	async registerByEmail(@Body() body: RegisterByEmailDto) {
+		return this.auth.registerByEmail(body);
 	}
 }

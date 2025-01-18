@@ -1,5 +1,5 @@
 //src/auth/auth.service.ts
-import { Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import { Injectable, NotFoundException, UnauthorizedException, ConflictException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { User } from '@prisma/client';
@@ -13,7 +13,7 @@ import { SmsService } from 'src/sms/sms.service';
 import { WechatService } from 'src/wechat/wechat.service';
 import { UsersService } from 'src/users/users.service';
 import { HttpService } from '@nestjs/axios';
-import { SignUpFormData, ValidateTokenDto } from './dto';
+import { RegisterByEmailDto, SignUpFormData, ValidateTokenDto } from './dto';
 import jwt_decode from 'jwt-decode';
 
 @Injectable()
@@ -305,5 +305,37 @@ export class AuthService {
 	private async updateRtHash(userId: number, rt: string): Promise<void> {
 		const hash = await this.passwordService.hashPassword(rt);
 		await this.userService.updateUserToken(userId, hash);
+	}
+
+	/**
+	 * 验证邮箱验证码 -> 检查用户是否已存在 -> 已存在则登录，否则注册 -> 返回 Token
+	 */
+	async registerByEmail(data: RegisterByEmailDto): Promise<Token> {
+		// 1. 验证邮箱验证码
+		const isValid = await this.validateEmailVerificationCode(data.token, data.code);
+		if (!isValid) {
+			throw new UnauthorizedException('Invalid email verification code');
+		}
+
+		// 2. 检查用户是否已存在
+		const user = await this.userService.findOneByEmail(data.email);
+		
+		if (user) {
+			// 3. 如果用户存在，直接登录
+			return this.login(data.email, data.password);
+		} else {
+			// 4. 如果用户不存在，创建新用户并返回token
+			const registerDto: RegisterDto = {
+				email: data.email,
+				password: data.password,
+				firstName: data.firstName,
+				lastName: data.lastName,
+				phoneNumber: data.phoneNumber,
+				country: data.country,
+				username: data.lastName + data.firstName,
+			};
+			
+			return this.register(registerDto);
+		}
 	}
 }

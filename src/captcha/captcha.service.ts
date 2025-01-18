@@ -16,6 +16,6 @@ export class CaptchaService {
 
 	async validateCaptcha(token: string, input: string): Promise<boolean> {
 		const storedCaptcha = await this.redisService.get(token);
-		return storedCaptcha === input;
+		return storedCaptcha?.toLowerCase() === input?.toLowerCase();
 	}
 }
