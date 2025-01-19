@@ -1,9 +1,7 @@
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
-import { CreatePhotoLogDto, PhotoLogCategory } from './dto/create-photo-log.dto';
-import { UpdatePhotoLogDto } from './dto/update-photo-log.dto';
+import { Injectable, NotFoundException, ForbiddenException,Inject } from '@nestjs/common';
+import { CreatePhotoLogDto, PhotoLogCategory,UpdatePhotoLogDto } from './dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { ConfigService } from '@nestjs/config';
-import { Inject } from '@nestjs/common';
 import { IStorageService } from 'src/storage/storage.interface';
 import { Prisma } from '@prisma/client';
 

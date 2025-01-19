@@ -7,23 +7,20 @@ import {
   Param,
   Delete,
   UseInterceptors,
-  UploadedFiles,
   ParseIntPipe,
   UploadedFile,
   BadRequestException,
   PayloadTooLargeException,
   Query,
   UseGuards,
+  Inject
 } from '@nestjs/common';
-import { FilesInterceptor, FileInterceptor } from '@nestjs/platform-express';
-import { ApiTags, ApiOperation, ApiConsumes, ApiBody, ApiBearerAuth, ApiOkResponse, ApiResponse } from '@nestjs/swagger';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { ApiTags, ApiOperation, ApiConsumes, ApiBody, ApiBearerAuth, ApiOkResponse } from '@nestjs/swagger';
 import { PhotoLogsService } from './photo-logs.service';
-import { CreatePhotoLogDto, PhotoLogCategory } from './dto/create-photo-log.dto';
-import { UpdatePhotoLogDto } from './dto/update-photo-log.dto';
+import { CreatePhotoLogDto, PhotoLogCategory,UpdatePhotoLogDto } from './dto';
 import { CurrentUser, Permissions, JwtAuthGuard } from 'src/common';
-import { Inject } from '@nestjs/common';
 import { IStorageService } from 'src/storage/storage.interface';
-import { extname } from 'path';
 import { PermissionEntity } from 'src/permissions/entities';
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
