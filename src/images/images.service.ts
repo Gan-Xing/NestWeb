@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException, ForbiddenException, Inject } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { CreateImageDto, UpdateImageDto } from './dto';
-import { PrismaService } from '../prisma/prisma.service';
+import { PrismaService } from 'src/prisma/prisma.service';
 import { IStorageService } from 'src/storage/storage.interface';
 
 @Injectable()

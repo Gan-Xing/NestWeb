@@ -17,7 +17,7 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiTags, ApiOperation, ApiConsumes, ApiBody, ApiBearerAuth, ApiOkResponse } from '@nestjs/swagger';
-import { ImagesService } from './images.service';
+import { ImagesService } from 'src/images/images.service';
 import { CreateImageDto, ImageCategory, UpdateImageDto } from './dto';
 import { CurrentUser, Permissions, JwtAuthGuard } from 'src/common';
 import { IStorageService } from 'src/storage/storage.interface';
