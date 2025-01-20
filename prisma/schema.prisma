@@ -61,7 +61,7 @@ model User {
   wechatId     String?   @unique
   miniWechatId String?
   articles     Article[]
-  photoLogs    PhotoLog[]
+  images       Image[]
   roles        Role[]    @relation("UserRoles")
 }
 
@@ -77,7 +77,7 @@ model Article {
   author      User?    @relation(fields: [authorId], references: [id])
 }
 
-model PhotoLog {
+model Image {
   id          Int      @id @default(autoincrement())
   description String
   area        String
@@ -91,4 +91,6 @@ model PhotoLog {
   updatedAt   DateTime @updatedAt
   createdById Int
   createdBy   User     @relation(fields: [createdById], references: [id])
+
+  @@map("images")
 }

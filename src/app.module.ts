@@ -27,7 +27,7 @@ import { EmailModule } from './email/email.module';
 import { SmsModule } from './sms/sms.module';
 import { WechatModule } from './wechat/wechat.module';
 import { StorageModule } from './storage/storage.module';
-import { PhotoLogsModule } from './photo-logs/photo-logs.module';
+import { ImagesModule } from './images/images.module';
 
 @Module({
 	imports: [
@@ -41,7 +41,7 @@ import { PhotoLogsModule } from './photo-logs/photo-logs.module';
 		PermissiongroupsModule,
 		MenusModule,
 		StorageModule,
-		PhotoLogsModule,
+		ImagesModule,
 		ConfigModule.forRoot({
 			isGlobal: true,
 			load: [Config]

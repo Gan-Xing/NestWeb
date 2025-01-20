@@ -14,8 +14,8 @@ async function deleteAllData() {
 async function main() {
   await deleteAllData();
   const adminRole = await createAdminRole();
-  const { authGroup, logsGroup } = await createPermissionGroups();
-  await createPermissions(adminRole, authGroup, logsGroup);
+  const { authGroup, logsGroup, resourcesGroup, imagesGroup } = await createPermissionGroups();
+  await createPermissions(adminRole, authGroup, logsGroup, resourcesGroup, imagesGroup);
   await createAdminUser(adminRole);
 }
 
@@ -39,6 +39,14 @@ async function createPermissionGroups() {
     data: {
       name: '日志管理',
       path: '/logs',
+    },
+  });
+
+  // 创建资源管理顶级菜单
+  const resourcesGroup = await prisma.permissionGroup.create({
+    data: {
+      name: '资源管理',
+      path: '/resources',
     },
   });
 
@@ -75,19 +83,19 @@ async function createPermissionGroups() {
     },
   });
 
-  // 创建图文日志子菜单
-  const photoLogsGroup = await prisma.permissionGroup.create({
+  // 创建图片管理子菜单
+  const imagesGroup = await prisma.permissionGroup.create({
     data: {
-      name: '图文日志',
-      path: '/logs/photo-logs',
-      parentId: logsGroup.id,
+      name: '图片管理',
+      path: '/resources/images',
+      parentId: resourcesGroup.id,
     },
   });
 
-  return { authGroup, logsGroup, photoLogsGroup };
+  return { authGroup, logsGroup, resourcesGroup, imagesGroup };
 }
 
-async function createPermissions(adminRole: any, authGroup: any, logsGroup: any) {
+async function createPermissions(adminRole: any, authGroup: any, logsGroup: any, resourcesGroup: any, imagesGroup: any) {
   // 创建权限管理相关权限
   const groups = await prisma.permissionGroup.findMany({
     where: {
@@ -136,51 +144,45 @@ async function createPermissions(adminRole: any, authGroup: any, logsGroup: any)
     }
   }
 
-  // 创建图文日志相关权限
-  const photoLogsGroup = await prisma.permissionGroup.findFirst({
-    where: {
-      path: '/logs/photo-logs',
-    },
-  });
-
-  const photoLogsPermissions = [
+  // 创建图片管理相关权限
+  const imagesPermissions = [
     {
-      name: '上传图文日志图片',
+      name: '上传图片管理图片',
       action: 'POST',
-      path: '/photo-logs/upload',
+      path: '/images/upload',
     },
     {
-      name: '查看图文日志列表',
+      name: '查看图片管理列表',
       action: 'GET',
-      path: '/photo-logs',
+      path: '/images',
     },
     {
-      name: '查看图文日志详情',
+      name: '查看图片管理详情',
       action: 'GET',
-      path: '/photo-logs/:id',
+      path: '/images/:id',
     },
     {
-      name: '新增图文日志',
+      name: '新增图片管理',
       action: 'POST',
-      path: '/photo-logs',
+      path: '/images',
     },
     {
-      name: '更新图文日志',
+      name: '更新图片管理',
       action: 'PATCH',
-      path: '/photo-logs/:id',
+      path: '/images/:id',
     },
     {
-      name: '删除图文日志',
+      name: '删除图片管理',
       action: 'DELETE',
-      path: '/photo-logs/:id',
+      path: '/images/:id',
     }
   ];
 
-  for (const perm of photoLogsPermissions) {
+  for (const perm of imagesPermissions) {
     await prisma.permission.create({
       data: {
         ...perm,
-        permissionGroupId: photoLogsGroup!.id,
+        permissionGroupId: imagesGroup!.id,
         roles: {
           connect: [{ id: adminRole.id }],
         },

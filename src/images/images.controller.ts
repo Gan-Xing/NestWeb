@@ -17,8 +17,8 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiTags, ApiOperation, ApiConsumes, ApiBody, ApiBearerAuth, ApiOkResponse } from '@nestjs/swagger';
-import { PhotoLogsService } from './photo-logs.service';
-import { CreatePhotoLogDto, PhotoLogCategory,UpdatePhotoLogDto } from './dto';
+import { ImagesService } from './images.service';
+import { CreateImageDto, ImageCategory, UpdateImageDto } from './dto';
 import { CurrentUser, Permissions, JwtAuthGuard } from 'src/common';
 import { IStorageService } from 'src/storage/storage.interface';
 import { PermissionEntity } from 'src/permissions/entities';
@@ -33,20 +33,20 @@ const ALLOWED_IMAGE_TYPES = [
   'image/heif'
 ];
 
-@ApiTags('照片日志管理')
-@Controller('api/photo-logs')
+@ApiTags('图片管理')
+@Controller('api/images')
 @UseGuards(JwtAuthGuard)
 @ApiBearerAuth()
-export class PhotoLogsController {
+export class ImagesController {
   constructor(
-    private readonly photoLogsService: PhotoLogsService,
+    private readonly imagesService: ImagesService,
     @Inject('IStorageService')
     private readonly storageService: IStorageService,
   ) {}
 
   @Post('upload')
   @UseInterceptors(FileInterceptor('file'))
-  @Permissions(new PermissionEntity({ action: 'POST', path: '/photo-logs/upload' }))
+  @Permissions(new PermissionEntity({ action: 'POST', path: '/images/upload' }))
   @ApiOperation({ summary: '上传图片' })
   @ApiConsumes('multipart/form-data')
   @ApiBody({
@@ -86,25 +86,25 @@ export class PhotoLogsController {
 
   @Post()
   @ApiBearerAuth()
-  @Permissions(new PermissionEntity({ action: 'POST', path: '/photo-logs' }))
+  @Permissions(new PermissionEntity({ action: 'POST', path: '/images' }))
   create(
-    @Body() createPhotoLogDto: CreatePhotoLogDto,
+    @Body() createImageDto: CreateImageDto,
     @CurrentUser('id') userId: number,
   ) {
-    return this.photoLogsService.create(createPhotoLogDto, userId);
+    return this.imagesService.create(createImageDto, userId);
   }
 
   @Get()
   @ApiBearerAuth()
-  @ApiOkResponse({ description: '获取图文日志列表' })
-  @Permissions(new PermissionEntity({ action: 'GET', path: '/photo-logs' }))
+  @ApiOkResponse({ description: '获取图片列表' })
+  @Permissions(new PermissionEntity({ action: 'GET', path: '/images' }))
   async findAll(
     @CurrentUser('isAdmin') isAdmin: boolean,
     @Query('current') current: string = '1',
     @Query('pageSize') pageSize: string = '10',
     @Query('description') description?: string,
     @Query('area') area?: string,
-    @Query('category') category?: PhotoLogCategory,
+    @Query('category') category?: ImageCategory,
     @Query('stakeNumber') stakeNumber?: string,
     @Query('tags') tags?: string[],
     @Query('createdBy') createdByStr?: string,
@@ -120,7 +120,7 @@ export class PhotoLogsController {
       }
     }
 
-    const result = await this.photoLogsService.findAll(
+    const result = await this.imagesService.findAll(
       Number(current),
       Number(pageSize),
       isAdmin,
@@ -156,38 +156,38 @@ export class PhotoLogsController {
       data: processedData,
     };
   }
+
   @Get(':id')
   @ApiBearerAuth()
-  @Permissions(new PermissionEntity({ action: 'GET', path: '/photo-logs/:id' }))
+  @Permissions(new PermissionEntity({ action: 'GET', path: '/images/:id' }))
   findOne(
     @Param('id', ParseIntPipe) id: number,
     @CurrentUser('id') userId: number,
     @CurrentUser('isAdmin') isAdmin: boolean,
   ) {
-    return this.photoLogsService.findOne(id, userId, isAdmin);
+    return this.imagesService.findOne(id, userId, isAdmin);
   }
 
   @Patch(':id')
   @ApiBearerAuth()
-  @Permissions(new PermissionEntity({ action: 'PATCH', path: '/photo-logs/:id' }))
+  @Permissions(new PermissionEntity({ action: 'PATCH', path: '/images/:id' }))
   update(
     @Param('id', ParseIntPipe) id: number,
-    @Body() updatePhotoLogDto: UpdatePhotoLogDto,
+    @Body() updateImageDto: UpdateImageDto,
     @CurrentUser('id') userId: number,
     @CurrentUser('isAdmin') isAdmin: boolean,
   ) {
-    return this.photoLogsService.update(id, updatePhotoLogDto, userId, isAdmin);
+    return this.imagesService.update(id, updateImageDto, userId, isAdmin);
   }
 
   @Delete(':id')
   @ApiBearerAuth()
-  @Permissions(new PermissionEntity({ action: 'DELETE', path: '/photo-logs/:id' }))
+  @Permissions(new PermissionEntity({ action: 'DELETE', path: '/images/:id' }))
   remove(
     @Param('id', ParseIntPipe) id: number,
     @CurrentUser('id') userId: number,
     @CurrentUser('isAdmin') isAdmin: boolean,
   ) {
-    return this.photoLogsService.remove(id, userId, isAdmin);
+    return this.imagesService.remove(id, userId, isAdmin);
   }
-
 } 

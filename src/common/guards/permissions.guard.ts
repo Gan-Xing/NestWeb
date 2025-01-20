@@ -54,9 +54,6 @@ export class PermissionsGuard implements CanActivate {
         permissions,
       );
 
-      console.log('权限验证结果:', hasPermission);
-      console.log('========== 权限验证结束 ==========');
-
       if (!hasPermission) {
         throw new UnauthorizedException('Insufficient permissions');
       }
