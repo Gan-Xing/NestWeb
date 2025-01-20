@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsString, IsArray, IsNotEmpty, IsOptional, IsNumber, IsObject, IsEnum } from 'class-validator';
+import { ImageThumbnail, ImageLocation } from '../interfaces/image.interface';
 
 export class LocationDto {
   @ApiProperty({ description: '纬度' })
@@ -33,6 +34,11 @@ export class CreateImageDto {
   @IsString({ each: true })
   @IsNotEmpty({ each: true })
   photos: string[];
+
+  @ApiProperty({ description: '缩略图信息', required: false })
+  @IsOptional()
+  @IsArray()
+  thumbnails?: ImageThumbnail[];
 
   @ApiProperty({ description: 'GPS位置信息', required: false })
   @IsOptional()

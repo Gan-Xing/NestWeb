@@ -79,6 +79,7 @@ export class ImagesController {
       data: {
         url: result.url,
         path: result.path,
+        thumbnails: result.thumbnails,
         location: result.location,
       },
     };
@@ -137,9 +138,8 @@ export class ImagesController {
     );
 
     const processedData = await Promise.all(
-      result.data.map(async (item) => ({
-        ...item,
-        photos: await Promise.all(
+      result.data.map(async (item) => {
+        const processedPhotos = await Promise.all(
           item.photos.map(async (photo) => {
             if (photo.startsWith('http://') || photo.startsWith('https://')) {
               return photo;
@@ -147,8 +147,23 @@ export class ImagesController {
             const presignedUrl = await this.storageService.getPresignedUrl(photo);
             return presignedUrl;
           })
-        ),
-      }))
+        );
+
+        const processedThumbnails = item.thumbnails ? await Promise.all(
+          item.thumbnails.map(async (thumbnail: any) => ({
+            ...thumbnail,
+            url: thumbnail.path.startsWith('http://') || thumbnail.path.startsWith('https://')
+              ? thumbnail.path
+              : await this.storageService.getPresignedUrl(thumbnail.path)
+          }))
+        ) : [];
+
+        return {
+          ...item,
+          photos: processedPhotos,
+          thumbnails: processedThumbnails,
+        };
+      })
     );
 
     return {

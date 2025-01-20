@@ -7,6 +7,8 @@ import { exiftool } from 'exiftool-vendored';
 import { exec } from 'child_process';
 import { promisify } from 'util';
 import * as fs from 'fs/promises';
+import * as path from 'path';
+import * as sharp from 'sharp';
 
 const execPromise = promisify(exec);
 
@@ -24,15 +26,22 @@ export class MinioStorageService implements IStorageService, OnModuleInit {
       
       // 如果配置了公共访问 URL，使用它的 hostname 作为 endPoint
       let endpoint = this.configService.get<string>('MINIO_ENDPOINT');
-      let port = parseInt(this.configService.get<string>('MINIO_PORT'));
-      let useSSL = false;
+      let port: number | undefined;
+      let useSSL = this.configService.get<string>('MINIO_USE_SSL') === 'true';
 
       if (publicUrl) {
         try {
           const url = new URL(publicUrl);
           endpoint = url.hostname;
-          port = url.port ? parseInt(url.port) : (url.protocol === 'https:' ? 443 : 80);
+          port = url.port ? parseInt(url.port) : undefined;
           useSSL = url.protocol === 'https:';
+          
+          console.log('MinIO Configuration from URL:', {
+            endpoint,
+            port,
+            useSSL,
+            publicUrl
+          });
         } catch (e) {
           console.warn('Invalid MINIO_PUBLIC_URL, falling back to default endpoint');
         }
@@ -40,11 +49,20 @@ export class MinioStorageService implements IStorageService, OnModuleInit {
 
       const config: any = {
         endPoint: endpoint,
-        port,
         useSSL,
         accessKey,
         secretKey,
       };
+
+      // 只有在明确指定端口时才添加端口配置
+      if (port) {
+        config.port = port;
+      }
+
+      console.log('Final MinIO Configuration:', {
+        ...config,
+        bucket: this.defaultBucket
+      });
 
       this.minioClient = new Client(config);
     } catch (error) {
@@ -131,11 +149,24 @@ export class MinioStorageService implements IStorageService, OnModuleInit {
 
   async uploadFile(
     file: Express.Multer.File,
-  ): Promise<{ url: string; path: string; location?: { latitude: number; longitude: number } }> {
+  ): Promise<{
+    url: string;
+    path: string;
+    thumbnails: Array<{ size: string; url: string; path: string }>;
+    location?: { latitude: number; longitude: number };
+  }> {
     const startTime = Date.now();
     console.log(`[${new Date().toISOString()}] 开始处理文件上传，大小: ${file.size} bytes`);
 
     const bucket = this.configService.get('MINIO_DEFAULT_BUCKET');
+    
+    // 确保 bucket 存在
+    const bucketExists = await this.minioClient.bucketExists(bucket);
+    if (!bucketExists) {
+      console.log(`Bucket ${bucket} 不存在，正在创建...`);
+      await this.minioClient.makeBucket(bucket, 'us-east-1');
+    }
+
     const fileBuffer = file.buffer;
     const fileType = file.mimetype;
     const isHeic = fileType === 'image/heic' || fileType === 'image/heif';
@@ -146,47 +177,80 @@ export class MinioStorageService implements IStorageService, OnModuleInit {
       // 并行处理 GPS 提取
       const gpsPromise = this.extractGPSInfo(fileBuffer);
 
+      let processedBuffer = fileBuffer;
+      let processedFileType = fileType;
       if (isHeic) {
-        // HEIC 文件处理：直接转换为 JPEG
-        const jpegPath = `photos/${timestamp}-${randomId}.jpg`;
-
-        // 并行处理文件转换和 GPS 提取
-        const [jpegBuffer, gpsInfo] = await Promise.all([
-          this.convertToJpeg(fileBuffer),
-          gpsPromise
-        ]);
-
-        // 上传转换后的文件
-        await this.minioClient.putObject(bucket, jpegPath, jpegBuffer, jpegBuffer.length, {
-          'Content-Type': 'image/jpeg',
-        });
-
-        return {
-          url: await this.getPresignedUrl(jpegPath),
-          path: jpegPath,
-          ...(gpsInfo && { location: gpsInfo }),
-        };
-      } else {
-        // 非 HEIC 文件处理
-        const ext = extname(file.originalname).toLowerCase() || '.jpg';
-        const filePath = `photos/${timestamp}-${randomId}${ext}`;
-
-        // 并行处理文件上传和 GPS 提取
-        const [gpsInfo] = await Promise.all([
-          gpsPromise,
-          this.minioClient.putObject(bucket, filePath, fileBuffer, fileBuffer.length, {
-            'Content-Type': file.mimetype,
-          })
-        ]);
-
-        return {
-          url: await this.getPresignedUrl(filePath),
-          path: filePath,
-          ...(gpsInfo && { location: gpsInfo }),
-        };
+        processedBuffer = await this.convertToJpeg(fileBuffer);
+        processedFileType = 'image/jpeg';
       }
+
+      // 生成文件路径
+      const ext = isHeic ? '.jpg' : path.extname(file.originalname);
+      const fileName = `${timestamp}-${randomId}${ext}`;
+      const filePath = `uploads/${fileName}`;
+
+      // 上传原始文件
+      await this.minioClient.putObject(
+        bucket,
+        filePath,
+        processedBuffer,
+        processedBuffer.length,
+        { 'Content-Type': processedFileType }
+      );
+
+      // 生成公共访问 URL
+      const publicUrl = this.configService.get('MINIO_PUBLIC_URL');
+      const fileUrl = publicUrl 
+        ? `${publicUrl}/${bucket}/${filePath}`  // 包含 bucket 名称
+        : await this.getPresignedUrl(filePath);
+
+      // 如果是图片，生成缩略图
+      const thumbnails: Array<{ size: string; url: string; path: string }> = [];
+      if (fileType.startsWith('image/')) {
+        const sizes = ['64x64', '500x500'];
+        for (const size of sizes) {
+          const [width, height] = size.split('x').map(Number);
+          const thumbnailBuffer = await sharp(processedBuffer)
+            .resize(width, height, {
+              fit: 'inside',
+              withoutEnlargement: true
+            })
+            .toBuffer();
+
+          const thumbnailPath = `uploads/thumbnails/${timestamp}-${randomId}-${size}${ext}`;
+          await this.minioClient.putObject(
+            bucket,
+            thumbnailPath,
+            thumbnailBuffer,
+            thumbnailBuffer.length,
+            { 'Content-Type': processedFileType }
+          );
+
+          // 生成缩略图的公共访问 URL
+          const thumbnailUrl = publicUrl
+            ? `${publicUrl}/${bucket}/${thumbnailPath}`  // 包含 bucket 名称
+            : await this.getPresignedUrl(thumbnailPath);
+
+          thumbnails.push({
+            size,
+            url: thumbnailUrl,
+            path: thumbnailPath
+          });
+        }
+      }
+
+      const location = await gpsPromise;
+
+      console.log(`[${new Date().toISOString()}] 文件上传完成，耗时: ${Date.now() - startTime}ms`);
+
+      return {
+        url: fileUrl,
+        path: filePath,
+        thumbnails,
+        ...(location && { location })
+      };
     } catch (error) {
-      console.error(`[${new Date().toISOString()}] 文件处理失败:`, error);
+      console.error('文件上传失败:', error);
       throw error;
     }
   }
@@ -201,7 +265,16 @@ export class MinioStorageService implements IStorageService, OnModuleInit {
     }
   }
   async getPresignedUrl(path: string, bucket: string = this.defaultBucket): Promise<string> {
-    return await this.minioClient.presignedGetObject(bucket, path, 24 * 60 * 60);
+    const publicUrl = this.configService.get<string>('MINIO_PUBLIC_URL');
+    
+    if (publicUrl) {
+      // 直接返回公共访问 URL，需要包含 bucket 名称
+      return `${publicUrl}/${bucket}/${path}`;
+    }
+
+    // 如果没有配置公共访问 URL，则返回预签名 URL
+    const url = await this.minioClient.presignedGetObject(bucket, path, 24 * 60 * 60);
+    return url;
   }
 
   async moveFile(

@@ -1,31 +1,32 @@
-# 使用官方 Node.js 18 图像作为基础图像
-FROM node:18
+# 使用 Node.js 官方镜像作为基础镜像
+FROM node:18-slim
 
-# 定义构建时的变量
-ARG DATABASE_URL
+# 安装必要的系统依赖
+RUN apt-get update && apt-get install -y \
+    libvips-dev \
+    libheif-dev \
+    && rm -rf /var/lib/apt/lists/*
 
-# 创建应用程序目录
-WORKDIR /usr/src/app
+# 设置工作目录
+WORKDIR /app
 
-# 安装应用程序依赖项
-COPY package.json ./
-RUN npm install -g pnpm && pnpm install
+# 复制 package.json 和 pnpm-lock.yaml
+COPY package.json pnpm-lock.yaml ./
 
-# 拷贝应用代码
+# 安装 pnpm
+RUN npm install -g pnpm
+
+# 安装依赖
+RUN pnpm install
+
+# 复制源代码
 COPY . .
 
-# 在执行 Prisma 命令前检查 DATABASE_URL 环境变量
-RUN if [ -z "$DATABASE_URL" ]; then echo "DATABASE_URL not set"; exit 1; fi
+# 构建应用
+RUN pnpm build
 
-# 生成 Prisma 客户端和运行迁移
-RUN npx prisma generate
-RUN npx prisma migrate deploy
+# 暴露端口
+EXPOSE 3000
 
-# 编译 NestJS 项目
-RUN pnpm run build
-
-# 开放端口
-EXPOSE 3030
-
-# 设置启动命令
-CMD ["pnpm", "run", "start:prod"]
+# 启动应用
+CMD ["pnpm", "start:prod"]

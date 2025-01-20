@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { CreateImageDto, UpdateImageDto } from './dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { IStorageService } from 'src/storage/storage.interface';
+import * as path from 'path';
 
 @Injectable()
 export class ImagesService {
@@ -26,6 +27,21 @@ export class ImagesService {
       category: category || '进度',
       tags: tags || [],
       createdById: userId,
+      thumbnails: createImageDto.photos.map(photo => {
+        const pathParts = photo.split('/');
+        const filename = pathParts[pathParts.length - 1];
+        const baseDir = pathParts.slice(0, -1).join('/');
+        return [
+          {
+            size: '64x64',
+            path: `${baseDir}/thumbnails/${filename.replace(/\.[^/.]+$/, '')}-64x64${path.extname(filename)}`,
+          },
+          {
+            size: '500x500',
+            path: `${baseDir}/thumbnails/${filename.replace(/\.[^/.]+$/, '')}-500x500${path.extname(filename)}`,
+          }
+        ];
+      }).flat(),
     };
 
     return this.prisma.image.create({
@@ -46,7 +62,7 @@ export class ImagesService {
     page: number,
     pageSize: number,
     isAdmin: boolean,
-    params?: {
+    filters: {
       description?: string;
       area?: string;
       category?: string;
@@ -55,58 +71,9 @@ export class ImagesService {
       createdBy?: { username?: string };
       startDate?: string;
       endDate?: string;
-    }
+    },
   ) {
-    const { description, area, category, stakeNumber, tags, createdBy, startDate, endDate } = params || {};
-
-    const where: any = {};
-
-    if (description) {
-      where.description = {
-        contains: description,
-        mode: 'insensitive'
-      };
-    }
-
-    if (area) {
-      where.area = {
-        contains: area,
-        mode: 'insensitive'
-      };
-    }
-
-    if (category) {
-      where.category = category;
-    }
-
-    if (stakeNumber) {
-      where.stakeNumber = {
-        contains: stakeNumber,
-        mode: 'insensitive'
-      };
-    }
-
-    if (tags && tags.length > 0) {
-      where.tags = {
-        hasSome: tags
-      };
-    }
-
-    if (createdBy?.username) {
-      where.createdBy = {
-        username: { contains: createdBy.username, mode: 'insensitive' },
-      };
-    }
-
-    if (startDate || endDate) {
-      where.createdAt = {};
-      if (startDate) {
-        where.createdAt.gte = new Date(startDate);
-      }
-      if (endDate) {
-        where.createdAt.lte = new Date(endDate);
-      }
-    }
+    const where = this.buildWhereClause(filters);
 
     const [total, data] = await Promise.all([
       this.prisma.image.count({ where }),
@@ -130,12 +97,11 @@ export class ImagesService {
     ]);
 
     return {
+      success: true,
       data,
-      pagination: {
-        current: page,
-        pageSize,
-        total,
-      },
+      total,
+      current: page,
+      pageSize,
     };
   }
 
@@ -189,11 +155,12 @@ export class ImagesService {
       throw new ForbiddenException('无权更新此图片');
     }
 
-    const { location, ...restDto } = updateImageDto;
+    const { location, thumbnails, ...restDto } = updateImageDto;
     
     const data = {
       ...restDto,
       location: location ? JSON.stringify(location) : undefined,
+      thumbnails: thumbnails ? thumbnails.map(t => ({ ...t })) : undefined,
     };
 
     return this.prisma.image.update({
@@ -244,5 +211,69 @@ export class ImagesService {
     return this.prisma.image.delete({
       where: { id },
     });
+  }
+
+  private buildWhereClause(filters: {
+    description?: string;
+    area?: string;
+    category?: string;
+    stakeNumber?: string;
+    tags?: string[];
+    createdBy?: { username?: string };
+    startDate?: string;
+    endDate?: string;
+  }) {
+    const { description, area, category, stakeNumber, tags, createdBy, startDate, endDate } = filters;
+
+    const where: any = {};
+
+    if (description) {
+      where.description = {
+        contains: description,
+        mode: 'insensitive'
+      };
+    }
+
+    if (area) {
+      where.area = {
+        contains: area,
+        mode: 'insensitive'
+      };
+    }
+
+    if (category) {
+      where.category = category;
+    }
+
+    if (stakeNumber) {
+      where.stakeNumber = {
+        contains: stakeNumber,
+        mode: 'insensitive'
+      };
+    }
+
+    if (tags && tags.length > 0) {
+      where.tags = {
+        hasSome: tags
+      };
+    }
+
+    if (createdBy?.username) {
+      where.createdBy = {
+        username: { contains: createdBy.username, mode: 'insensitive' },
+      };
+    }
+
+    if (startDate || endDate) {
+      where.createdAt = {};
+      if (startDate) {
+        where.createdAt.gte = new Date(startDate);
+      }
+      if (endDate) {
+        where.createdAt.lte = new Date(endDate);
+      }
+    }
+
+    return where;
   }
 } 

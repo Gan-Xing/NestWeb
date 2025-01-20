@@ -82,6 +82,7 @@ model Image {
   description String
   area        String
   photos      String[]
+  thumbnails  Json[]   // 存储不同尺寸的缩略图信息，包含 path, size, url
   location    Json?    // 存储GPS信息，包含 latitude 和 longitude
   stakeNumber String?  // 桩号，可选
   offset      Float?   // 偏距，可选
