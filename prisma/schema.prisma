@@ -86,7 +86,7 @@ model Image {
   location    Json?    // 存储GPS信息，包含 latitude 和 longitude
   stakeNumber String?  // 桩号，可选
   offset      Float?   // 偏距，可选
-  category    String   @default("安全") // 分类：安全、质量、进度
+  category    String   @default("safety") // 分类：progress, safety, quality
   tags        String[] @default([])    // 标签数组
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt

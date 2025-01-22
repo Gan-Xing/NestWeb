@@ -13,9 +13,9 @@ export class LocationDto {
 }
 
 export enum ImageCategory {
-  SAFETY = '安全',
-  QUALITY = '质量',
-  PROGRESS = '进度',
+  PROGRESS = 'progress',
+  SAFETY = 'safety',
+  QUALITY = 'quality',
 }
 
 export class CreateImageDto {
@@ -55,7 +55,7 @@ export class CreateImageDto {
   @IsNumber()
   offset?: number;
 
-  @ApiProperty({ description: '分类', enum: ImageCategory, default: ImageCategory.SAFETY })
+  @ApiProperty({ description: '分类', enum: ImageCategory, default: ImageCategory.PROGRESS })
   @IsEnum(ImageCategory)
   @IsOptional()
   category?: ImageCategory;
