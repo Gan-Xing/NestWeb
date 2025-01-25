@@ -1,6 +1,7 @@
 import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR, APP_PIPE, Reflector } from '@nestjs/core';
-import { ClassSerializerInterceptor, Module, ValidationPipe } from '@nestjs/common';
+import { ClassSerializerInterceptor, Module, OnModuleInit, ValidationPipe,} from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { I18nModule, AcceptLanguageResolver, QueryResolver, HeaderResolver, I18nService} from 'nestjs-i18n';
 import {
 	Config,
 	JwtAuthGuard,
@@ -28,6 +29,7 @@ import { SmsModule } from './sms/sms.module';
 import { WechatModule } from './wechat/wechat.module';
 import { StorageModule } from './storage/storage.module';
 import { ImagesModule } from './images/images.module';
+import * as path from 'path';
 
 @Module({
 	imports: [
@@ -60,7 +62,19 @@ import { ImagesModule } from './images/images.module';
 		CaptchaModule,
 		EmailModule,
 		SmsModule,
-		WechatModule
+		WechatModule,
+		I18nModule.forRoot({
+			fallbackLanguage: 'en', // 默认语言
+			loaderOptions: {
+			  path: path.join(process.cwd(), 'src', 'i18n'), // 使用 process.cwd() 动态定位根目录
+			  watch: true, // 监听文件变动
+			},
+			resolvers: [
+			  { use: QueryResolver, options: ['lang'] }, // 支持通过 URL Query 参数指定语言
+			  { use: HeaderResolver, options: ['x-custom-lang'] }, // 支持通过 Header 指定语言
+			  AcceptLanguageResolver, // 默认支持 Accept-Language 头部
+			],
+		  }),
 	],
 	controllers: [AppController],
 	providers: [
