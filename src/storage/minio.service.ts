@@ -15,6 +15,7 @@ const execPromise = promisify(exec);
 @Injectable()
 export class MinioStorageService implements IStorageService, OnModuleInit {
   private minioClient: Client;
+  private minioInternalClient: Client;
   private defaultBucket: string;
 
   constructor(private configService: ConfigService) {
@@ -24,7 +25,7 @@ export class MinioStorageService implements IStorageService, OnModuleInit {
       const secretKey = this.configService.get<string>('MINIO_SECRET_KEY');
       const publicUrl = this.configService.get<string>('MINIO_PUBLIC_URL');
       
-      // 如果配置了公共访问 URL，使用它的 hostname 作为 endPoint
+      // 配置外网客户端
       let endpoint = this.configService.get<string>('MINIO_ENDPOINT');
       let port: number | undefined;
       let useSSL = this.configService.get<string>('MINIO_USE_SSL') === 'true';
@@ -36,7 +37,7 @@ export class MinioStorageService implements IStorageService, OnModuleInit {
           port = url.port ? parseInt(url.port) : undefined;
           useSSL = url.protocol === 'https:';
           
-          console.log('MinIO Configuration from URL:', {
+          console.log('MinIO External Configuration:', {
             endpoint,
             port,
             useSSL,
@@ -47,24 +48,40 @@ export class MinioStorageService implements IStorageService, OnModuleInit {
         }
       }
 
-      const config: any = {
+      // 配置内网客户端
+      const internalEndpoint = this.configService.get<string>('MINIO_INTERNAL_ENDPOINT');
+      const internalPort = this.configService.get<number>('MINIO_INTERNAL_PORT');
+      const internalUseSSL = this.configService.get<string>('MINIO_INTERNAL_USE_SSL') === 'true';
+
+      // 创建外网客户端配置
+      const externalConfig: any = {
         endPoint: endpoint,
         useSSL,
         accessKey,
         secretKey,
       };
 
-      // 只有在明确指定端口时才添加端口配置
       if (port) {
-        config.port = port;
+        externalConfig.port = port;
       }
 
-      console.log('Final MinIO Configuration:', {
-        ...config,
-        bucket: this.defaultBucket
+      // 创建内网客户端配置
+      const internalConfig: any = {
+        endPoint: internalEndpoint,
+        port: internalPort,
+        useSSL: internalUseSSL,
+        accessKey,
+        secretKey,
+      };
+
+      console.log('MinIO Configuration:', {
+        external: { ...externalConfig, bucket: this.defaultBucket },
+        internal: { ...internalConfig, bucket: this.defaultBucket }
       });
 
-      this.minioClient = new Client(config);
+      // 初始化两个客户端
+      this.minioClient = new Client(externalConfig);
+      this.minioInternalClient = new Client(internalConfig);
     } catch (error) {
       console.error('Failed to initialize Minio client:', error);
       throw error;
@@ -73,12 +90,23 @@ export class MinioStorageService implements IStorageService, OnModuleInit {
 
   async onModuleInit() {
     try {
-      const bucketExists = await this.minioClient.bucketExists(this.defaultBucket);
+      // 使用内网客户端检查和创建 bucket
+      const bucketExists = await this.minioInternalClient.bucketExists(this.defaultBucket);
       if (!bucketExists) {
-        await this.minioClient.makeBucket(this.defaultBucket, 'us-east-1');
+        await this.minioInternalClient.makeBucket(this.defaultBucket, 'us-east-1');
+        console.log(`[${new Date().toISOString()}] Bucket ${this.defaultBucket} created successfully`);
+      } else {
+        console.log(`[${new Date().toISOString()}] Bucket ${this.defaultBucket} already exists`);
       }
     } catch (error) {
       console.error('Failed to initialize Minio bucket:', error);
+      // 添加更详细的错误日志
+      if (error.code) {
+        console.error('Error code:', error.code);
+      }
+      if (error.message) {
+        console.error('Error message:', error.message);
+      }
     }
   }
 
@@ -161,10 +189,10 @@ export class MinioStorageService implements IStorageService, OnModuleInit {
     const bucket = this.configService.get('MINIO_DEFAULT_BUCKET');
     
     // 确保 bucket 存在
-    const bucketExists = await this.minioClient.bucketExists(bucket);
+    const bucketExists = await this.minioInternalClient.bucketExists(bucket);
     if (!bucketExists) {
       console.log(`Bucket ${bucket} 不存在，正在创建...`);
-      await this.minioClient.makeBucket(bucket, 'us-east-1');
+      await this.minioInternalClient.makeBucket(bucket, 'us-east-1');
     }
 
     const fileBuffer = file.buffer;
@@ -189,8 +217,8 @@ export class MinioStorageService implements IStorageService, OnModuleInit {
       const fileName = `${timestamp}-${randomId}${ext}`;
       const filePath = `uploads/${fileName}`;
 
-      // 上传原始文件
-      await this.minioClient.putObject(
+      // 使用内网客户端上传原始文件
+      await this.minioInternalClient.putObject(
         bucket,
         filePath,
         processedBuffer,
@@ -201,7 +229,7 @@ export class MinioStorageService implements IStorageService, OnModuleInit {
       // 生成公共访问 URL
       const publicUrl = this.configService.get('MINIO_PUBLIC_URL');
       const fileUrl = publicUrl 
-        ? `${publicUrl}/${bucket}/${filePath}`  // 包含 bucket 名称
+        ? `${publicUrl}/${bucket}/${filePath}`
         : await this.getPresignedUrl(filePath);
 
       // 如果是图片，生成缩略图
@@ -218,7 +246,8 @@ export class MinioStorageService implements IStorageService, OnModuleInit {
             .toBuffer();
 
           const thumbnailPath = `uploads/thumbnails/${timestamp}-${randomId}-${size}${ext}`;
-          await this.minioClient.putObject(
+          // 使用内网客户端上传缩略图
+          await this.minioInternalClient.putObject(
             bucket,
             thumbnailPath,
             thumbnailBuffer,
@@ -228,7 +257,7 @@ export class MinioStorageService implements IStorageService, OnModuleInit {
 
           // 生成缩略图的公共访问 URL
           const thumbnailUrl = publicUrl
-            ? `${publicUrl}/${bucket}/${thumbnailPath}`  // 包含 bucket 名称
+            ? `${publicUrl}/${bucket}/${thumbnailPath}`
             : await this.getPresignedUrl(thumbnailPath);
 
           thumbnails.push({
@@ -257,22 +286,23 @@ export class MinioStorageService implements IStorageService, OnModuleInit {
 
   async deleteFile(path: string, bucket: string = this.defaultBucket): Promise<boolean> {
     try {
-      await this.minioClient.removeObject(bucket, path);
+      // 使用内网客户端删除文件
+      await this.minioInternalClient.removeObject(bucket, path);
       return true;
     } catch (error) {
       console.error('Error deleting file:', error);
       return false;
     }
   }
+
   async getPresignedUrl(path: string, bucket: string = this.defaultBucket): Promise<string> {
     const publicUrl = this.configService.get<string>('MINIO_PUBLIC_URL');
     
     if (publicUrl) {
-      // 直接返回公共访问 URL，需要包含 bucket 名称
       return `${publicUrl}/${bucket}/${path}`;
     }
 
-    // 如果没有配置公共访问 URL，则返回预签名 URL
+    // 使用外网客户端生成预签名URL
     const url = await this.minioClient.presignedGetObject(bucket, path, 24 * 60 * 60);
     return url;
   }
@@ -283,8 +313,9 @@ export class MinioStorageService implements IStorageService, OnModuleInit {
     bucket: string = this.defaultBucket,
   ): Promise<boolean> {
     try {
-      await this.minioClient.copyObject(bucket, newPath, `${bucket}/${oldPath}`, null);
-      await this.minioClient.removeObject(bucket, oldPath);
+      // 使用内网客户端进行文件操作
+      await this.minioInternalClient.copyObject(bucket, newPath, `${bucket}/${oldPath}`, null);
+      await this.minioInternalClient.removeObject(bucket, oldPath);
       return true;
     } catch (error) {
       console.error('Error moving file:', error);
