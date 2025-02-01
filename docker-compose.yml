@@ -19,6 +19,9 @@ services:
                                         ALIBABA_CLOUD_ACCESS_KEY_SECRET: ${ALIBABA_CLOUD_ACCESS_KEY_SECRET}
                                         MINIPROGRAM_APPID: ${MINIPROGRAM_APPID}
                                         MINIPROGRAM_SECRET: ${MINIPROGRAM_SECRET}
+                                        RABBITMQ_URI: ${RABBITMQ_URI}
+                                        RABBITMQ_USER: ${RABBITMQ_USER}
+                                        RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD}
                     ports:
                               - '3030:3030'
                     environment:
@@ -35,4 +38,57 @@ services:
                               ALIBABA_CLOUD_ACCESS_KEY_SECRET: ${ALIBABA_CLOUD_ACCESS_KEY_SECRET}
                               MINIPROGRAM_APPID: ${MINIPROGRAM_APPID}
                               MINIPROGRAM_SECRET: ${MINIPROGRAM_SECRET}
+                              RABBITMQ_URI: ${RABBITMQ_URI}
+                              RABBITMQ_USER: ${RABBITMQ_USER}
+                              RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD}
                     restart: always
+                    depends_on:
+                              - rabbitmq
+                              - prometheus
+
+          rabbitmq:
+                    image: rabbitmq:3-management
+                    container_name: rabbitmq
+                    ports:
+                              - "5672:5672"   # AMQP 协议端口
+                              - "15672:15672" # 管理界面端口
+                    environment:
+                              - RABBITMQ_DEFAULT_USER=${RABBITMQ_USER}
+                              - RABBITMQ_DEFAULT_PASS=${RABBITMQ_PASSWORD}
+                    volumes:
+                              - rabbitmq_data:/var/lib/rabbitmq
+                    restart: always
+
+          prometheus:
+                    image: prom/prometheus:latest
+                    container_name: prometheus
+                    ports:
+                              - "9090:9090"
+                    volumes:
+                              - ./prometheus.yml:/etc/prometheus/prometheus.yml
+                              - prometheus_data:/prometheus
+                    command:
+                              - '--config.file=/etc/prometheus/prometheus.yml'
+                              - '--storage.tsdb.path=/prometheus'
+                              - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+                              - '--web.console.templates=/usr/share/prometheus/consoles'
+                    restart: always
+
+          grafana:
+                    image: grafana/grafana:latest
+                    container_name: grafana
+                    ports:
+                              - "3000:3000"
+                    volumes:
+                              - grafana_data:/var/lib/grafana
+                    environment:
+                              - GF_SECURITY_ADMIN_USER=admin
+                              - GF_SECURITY_ADMIN_PASSWORD=admin
+                    depends_on:
+                              - prometheus
+                    restart: always
+
+volumes:
+          rabbitmq_data:
+          prometheus_data:
+          grafana_data:

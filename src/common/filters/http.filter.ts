@@ -4,13 +4,29 @@ import {
   ArgumentsHost,
   HttpStatus,
   HttpException,
+  Logger,
 } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { Request, Response } from 'express';
 
 @Catch()
 export class HttpFilter implements ExceptionFilter {
+  private readonly logger = new Logger(HttpFilter.name);
+
   catch(exception: unknown, host: ArgumentsHost) {
+    const contextType = host.getType();
+    
+    if (contextType === 'http') {
+      return this.handleHttpException(exception, host);
+    } else if (contextType === 'rpc') {
+      return this.handleRpcException(exception, host);
+    } else {
+      this.logger.error(`Unhandled exception in ${contextType} context:`, exception);
+      throw exception;
+    }
+  }
+
+  private handleHttpException(exception: unknown, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
     const request = ctx.getRequest<Request>();
@@ -48,5 +64,15 @@ export class HttpFilter implements ExceptionFilter {
       success: false,
       showType: 2,
     });
+  }
+
+  private handleRpcException(exception: unknown, host: ArgumentsHost) {
+    this.logger.error('RPC Exception:', {
+      error: exception instanceof Error ? exception.message : 'Unknown error',
+      stack: exception instanceof Error ? exception.stack : undefined,
+    });
+    
+    // 对于RPC上下文，我们只记录错误并重新抛出
+    throw exception;
   }
 }

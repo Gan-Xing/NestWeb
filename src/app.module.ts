@@ -29,6 +29,7 @@ import { SmsModule } from './sms/sms.module';
 import { WechatModule } from './wechat/wechat.module';
 import { StorageModule } from './storage/storage.module';
 import { ImagesModule } from './images/images.module';
+import { QueueModule } from './queue/queue.module';
 import * as path from 'path';
 
 @Module({
@@ -44,6 +45,7 @@ import * as path from 'path';
 		MenusModule,
 		StorageModule,
 		ImagesModule,
+		QueueModule,
 		ConfigModule.forRoot({
 			isGlobal: true,
 			load: [Config]
