@@ -164,8 +164,8 @@ export class AuthService {
 		return value;
 	}
 
-	async sendEmailVerificationCode(email: string): Promise<string> {
-		return await this.emailService.sendEmailVerificationCode(email);
+	async sendEmailVerificationCode(email: string, country: string): Promise<string> {
+		return await this.emailService.sendEmailVerificationCode(email, country);
 	}
 
 	async validateEmailVerificationCode(token: string, inputCode: string): Promise<boolean> {

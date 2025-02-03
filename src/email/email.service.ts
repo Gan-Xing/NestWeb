@@ -5,6 +5,7 @@ import { RedisService } from "src/redis/redis.service";
 import { getRandomByte } from "src/common";
 import { EmailProducer } from "../queue/producers/email.producer";
 import { IEmailMessage } from "../queue/interfaces/email-queue.interface";
+import { I18nService } from 'nestjs-i18n';
 
 @Injectable()
 export class EmailService {
@@ -14,6 +15,7 @@ export class EmailService {
   constructor(
     private readonly redisService: RedisService,
     private readonly emailProducer: EmailProducer,
+    private readonly i18n: I18nService,
   ) {
     // 验证必要的环境变量
     if (!process.env.GMAIL_USER || !process.env.GMAIL_APP_PASSWORD) {
@@ -68,19 +70,35 @@ export class EmailService {
   /**
    * 发送验证码邮件
    */
-  async sendEmailVerificationCode(email: string): Promise<string> {
+  async sendEmailVerificationCode(email: string, country: string = 'CN'): Promise<string> {
     const emailVerificationCode = getRandomByte(3);
     const expirationTime = 15; // 验证码有效期，单位为分钟
 
+    // 根据国家选择语言
+    const lang = country === 'CN' ? 'zh' : 'fr';
+
+    // 获取翻译后的文本
+    const subject = await this.i18n.translate('email.verification.subject', { lang });
+    const title = await this.i18n.translate('email.verification.title', { lang });
+    const hello = await this.i18n.translate('email.verification.hello', { lang });
+    const intro = await this.i18n.translate('email.verification.intro', { lang });
+    const instruction = await this.i18n.translate('email.verification.instruction', { lang });
+    const expiryNotice = await this.i18n.translate('email.verification.expiry_notice', { 
+      lang,
+      args: { minutes: expirationTime }
+    });
+    const regards = await this.i18n.translate('email.verification.regards', { lang });
+    const team = await this.i18n.translate('email.verification.team', { lang });
+
     const htmlContent = `
       <div style="font-family: Arial, sans-serif; color: #333;">
-        <h2 style="color: #4F8A10;">验证您的邮箱</h2>
-        <p>您好，</p>
-        <p>您正在访问<strong>"TRAVAUX D'AMÉNAGEMENT ET REVÊTEMENT DE LA ROUTE BONDOUKOU – SOKO – FRONTIÈRE DU GHANA (11 KM)"有趣实验室的项目后台管理系统</strong>。</p>
-        <p>为了完成注册，请使用以下验证码：</p>
+        <h2 style="color: #4F8A10;">${title}</h2>
+        <p>${hello}</p>
+        <p>${intro}</p>
+        <p>${instruction}</p>
         <p style="font-size: 20px; color: #0000FF; font-weight: bold;">${emailVerificationCode}</p>
-        <p>请注意，该验证码将在 <strong>${expirationTime}</strong> 分钟后失效。如果您没有请求此验证码，请忽略此邮件。</p>
-        <p style="margin-top: 20px;">此致<br>有趣实验室团队</p>
+        <p>${expiryNotice}</p>
+        <p style="margin-top: 20px;">${regards}<br>${team}</p>
       </div>
     `;
 
@@ -88,8 +106,8 @@ export class EmailService {
     const mailOptions: IEmailMessage = {
       from: process.env.MAIL_FROM,
       to: email,
-      subject: "邮箱验证 - 有趣实验室项目后台管理系统",
-      text: `您正在访问"TRAVAUX D'AMÉNAGEMENT ET REVÊTEMENT DE LA ROUTE BONDOUKOU – SOKO – FRONTIÈRE DU GHANA (11 KM)"有趣实验室的项目后台管理系统。为了完成注册，请使用以下验证码：${emailVerificationCode}。该验证码将在${expirationTime}分钟后失效。如果您没有请求此验证码，请忽略此邮件。`,
+      subject: subject,
+      text: `${hello}\n\n${intro}\n\n${instruction}\n\n${emailVerificationCode}\n\n${expiryNotice}\n\n${regards}\n${team}`,
       html: htmlContent,
     };
 

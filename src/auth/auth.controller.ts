@@ -79,7 +79,8 @@ export class AuthController {
 
 		if (validationResponse.isValid) {
 			const token = await this.auth.sendEmailVerificationCode(
-				signupData.email
+				signupData.email,
+				signupData.country
 			);
 			return { isValid: true, token };
 		} else {

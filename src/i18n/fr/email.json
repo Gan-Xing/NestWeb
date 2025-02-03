@@ -1,0 +1,12 @@
+{
+  "verification": {
+    "subject": "Vérification de l'email - Système de gestion de projet Fun Lab",
+    "title": "Vérifiez votre email",
+    "hello": "Bonjour,",
+    "intro": "Vous accédez au système de gestion du projet \"TRAVAUX D'AMÉNAGEMENT ET REVÊTEMENT DE LA ROUTE BONDOUKOU – SOKO – FRONTIÈRE DU GHANA (11 KM)\" de Fun Lab.",
+    "instruction": "Pour compléter l'inscription, veuillez utiliser le code de vérification suivant :",
+    "expiry_notice": "Veuillez noter que ce code de vérification expirera dans {minutes} minutes. Si vous n'avez pas demandé ce code, veuillez ignorer cet email.",
+    "regards": "Cordialement,",
+    "team": "L'équipe Fun Lab"
+  }
+} 

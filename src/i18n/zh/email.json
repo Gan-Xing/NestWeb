@@ -1,0 +1,12 @@
+{
+  "verification": {
+    "subject": "邮箱验证 - 有趣实验室项目后台管理系统",
+    "title": "验证您的邮箱",
+    "hello": "您好，",
+    "intro": "您正在访问 \"TRAVAUX D'AMÉNAGEMENT ET REVÊTEMENT DE LA ROUTE BONDOUKOU – SOKO – FRONTIÈRE DU GHANA (11 KM)\"有趣实验室的项目后台管理系统。",
+    "instruction": "为了完成注册，请使用以下验证码：",
+    "expiry_notice": "请注意，该验证码将在 {minutes} 分钟后失效。如果您没有请求此验证码，请忽略此邮件。",
+    "regards": "此致",
+    "team": "有趣实验室团队"
+  }
+} 
