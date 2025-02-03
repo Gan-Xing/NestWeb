@@ -1,5 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEmail, IsNotEmpty, IsString, MinLength, Matches } from 'class-validator';
+import { IsEmail, IsNotEmpty, IsString, MinLength, Validate } from 'class-validator';
+import { CountryCode } from 'src/common/utils/phone-validation';
+import { PhoneNumberValidator } from 'src/common/validators/phone.validator';
 
 export class SignUpFormData {
 	@ApiProperty()
@@ -31,12 +33,12 @@ export class SignUpFormData {
 	@ApiProperty()
 	@IsString()
 	@IsNotEmpty()
-	country: string;
+	country: CountryCode;
 
 	@ApiProperty()
 	@IsString()
 	@IsNotEmpty()
-	@Matches(/^1[3-9]\d{9}$/, { message: 'Please enter a valid phone number' })
+	@Validate(PhoneNumberValidator, ['country'])
 	phoneNumber: string;
 
 	@ApiProperty()

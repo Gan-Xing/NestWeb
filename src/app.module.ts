@@ -31,6 +31,7 @@ import { StorageModule } from './storage/storage.module';
 import { ImagesModule } from './images/images.module';
 import { QueueModule } from './queue/queue.module';
 import * as path from 'path';
+import { PhoneNumberValidator } from './common/validators/phone.validator';
 
 @Module({
 	imports: [
@@ -110,7 +111,8 @@ import * as path from 'path';
 		{
 			provide: APP_FILTER,
 			useClass: HttpFilter
-		}
+		},
+		PhoneNumberValidator
 	]
 })
 export class AppModule {}
