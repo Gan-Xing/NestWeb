@@ -32,6 +32,8 @@ import { ImagesModule } from './images/images.module';
 import { QueueModule } from './queue/queue.module';
 import * as path from 'path';
 import { PhoneNumberValidator } from './common/validators/phone.validator';
+import { SystemLogInterceptor } from './common/interceptors/system-log.interceptor';
+import { SystemLogModule } from './system-log/system-log.module';
 
 @Module({
 	imports: [
@@ -78,6 +80,7 @@ import { PhoneNumberValidator } from './common/validators/phone.validator';
 			  AcceptLanguageResolver, // 默认支持 Accept-Language 头部
 			],
 		  }),
+		SystemLogModule,
 	],
 	controllers: [AppController],
 	providers: [
@@ -107,6 +110,10 @@ import { PhoneNumberValidator } from './common/validators/phone.validator';
 			useFactory: (reflector: Reflector) =>
 				new ClassSerializerInterceptor(reflector),
 			inject: [Reflector]
+		},
+		{
+			provide: APP_INTERCEPTOR,
+			useClass: SystemLogInterceptor,
 		},
 		{
 			provide: APP_FILTER,

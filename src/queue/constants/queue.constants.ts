@@ -45,4 +45,8 @@ export const MONITORING_THRESHOLDS = {
     // 错误率警告阈值（百分比）
     errorRateWarning: 5,
   },
-}; 
+};
+
+// 添加系统日志相关常量
+export const SYSTEM_LOG_QUEUE = 'system-log';
+export const SYSTEM_LOG_CREATE_JOB = 'create'; 
