@@ -63,6 +63,7 @@ model User {
   articles     Article[]
   images       Image[]
   roles        Role[]    @relation("UserRoles")
+  systemLogs   SystemLog[]
 }
 
 model Article {
@@ -94,4 +95,25 @@ model Image {
   createdBy   User     @relation(fields: [createdById], references: [id])
 
   @@map("images")
+}
+
+model SystemLog {
+  id          Int      @id @default(autoincrement())
+  userId      Int      // 操作用户ID
+  username    String   // 操作用户名，冗余存储方便查询
+  requestUrl  String   // 请求路径
+  method      String   // 请求方法 GET/POST/PUT/DELETE
+  status      Int      // HTTP状态码
+  errorMsg    String?  // 错误信息，可选
+  ip          String   // 客户端IP
+  userAgent   String?  // 用户代理信息，可选
+  duration    Int      // 请求耗时(ms)
+  createdAt   DateTime @default(now())
+
+  user        User?    @relation(fields: [userId], references: [id])
+
+  @@index([userId, createdAt])
+  @@index([requestUrl, method])
+  @@index([status])
+  @@map("system_logs")
 }
