@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { QueryLogDto } from './dto/query-log.dto';
 import { Prisma } from '@prisma/client';
+import { transformSystemLog } from './utils/log-transformer';
 
 @Injectable()
 export class SystemLogService {
@@ -24,7 +25,7 @@ export class SystemLogService {
       if (endTime) where.createdAt.lte = new Date(endTime);
     }
 
-    const [total, data] = await Promise.all([
+    const [total, rawData] = await Promise.all([
       this.prisma.systemLog.count({ where }),
       this.prisma.systemLog.findMany({
         where,
@@ -33,6 +34,26 @@ export class SystemLogService {
         take: pageSize,
       }),
     ]);
+
+    // 使用 transformSystemLog 转换数据，并处理可能的转换错误
+    const data = rawData.map(log => {
+      try {
+        return transformSystemLog(log);
+      } catch {
+        // 如果转换失败，返回一个基本的错误对象
+        return {
+          id: log.id || 0,
+          username: log.username || '未知用户',
+          country: '未知',
+          city: '未知',
+          isp: '未知',
+          requestDescription: `${log.method || 'UNKNOWN'} ${log.requestUrl || '/unknown'}`,
+          duration: log.duration || 0,
+          success: false,
+          createdAt: log.createdAt || new Date(),
+        };
+      }
+    });
 
     return {
       total,
