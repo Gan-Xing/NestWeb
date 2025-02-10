@@ -7,9 +7,17 @@ import { Request, Response } from 'express';
 import { User } from '@prisma/client';
 import { Reflector } from '@nestjs/core';
 import { SystemLogData } from 'src/system-log/interfaces/system-log.interface';
-import { SYSTEM_LOG_QUEUE, SYSTEM_LOG_CREATE_JOB } from 'src/queue/constants/queue.constants';
+import { 
+  SYSTEM_LOG_QUEUE, 
+  SYSTEM_LOG_CREATE_JOB,
+  IP_GEO_QUEUE,
+  IP_GEO_FETCH_JOB,
+  IP_GEO_REDIS_PREFIX,
+  IP_GEO_REDIS_TTL 
+} from 'src/queue/constants/queue.constants';
 import { SKIP_SYSTEM_LOG_KEY } from 'src/common/decorators/skip-system-log.decorator';
-import axios from 'axios';
+import { RedisService } from 'src/redis/redis.service';
+import { Logger } from '@nestjs/common';
 
 export interface RequestWithUser extends Request {
   user?: User;
@@ -17,8 +25,12 @@ export interface RequestWithUser extends Request {
 
 @Injectable()
 export class SystemLogInterceptor implements NestInterceptor {
+  private readonly logger = new Logger(SystemLogInterceptor.name);
+
   constructor(
     @InjectQueue(SYSTEM_LOG_QUEUE) private logQueue: Queue,
+    @InjectQueue(IP_GEO_QUEUE) private geoQueue: Queue,
+    private redisService: RedisService,
     private reflector: Reflector,
   ) {}
 
@@ -26,6 +38,7 @@ export class SystemLogInterceptor implements NestInterceptor {
     if (!user) return 'anonymous';
     return `${user.username || ''}` || 'anonymous';
   }
+
   private getClientIp(request: Request): string {
     const xForwardedFor = request.headers['x-forwarded-for'];
     const cfIp = request.headers['cf-connecting-ip'];
@@ -33,28 +46,52 @@ export class SystemLogInterceptor implements NestInterceptor {
     let ip = '';
   
     if (cfIp) {
-      ip = Array.isArray(cfIp) ? cfIp[0] : cfIp; // ✅ 处理 Cloudflare 头（防止类型错误）
+      ip = Array.isArray(cfIp) ? cfIp[0] : cfIp;
     } else if (xForwardedFor) {
-      ip = Array.isArray(xForwardedFor) ? xForwardedFor[0] : xForwardedFor; // ✅ 处理 X-Forwarded-For 头
+      ip = Array.isArray(xForwardedFor) ? xForwardedFor[0] : xForwardedFor;
     } else {
-      ip = request.ip || request.socket.remoteAddress || 'unknown'; // 兜底策略
+      ip = request.ip || request.socket.remoteAddress || 'unknown';
+    }
+  
+    // 处理本地开发环境
+    if (ip === '::1' || ip === '::ffff:127.0.0.1') {
+      // 可以使用一个公共 IP 用于测试
+      ip = '114.114.114.114';  // 或者其他测试用的公网 IP
     }
   
     return ip.trim();
   }
 
-  private async getGeoLocation(ip: string) {
-    try {
-      const response = await axios.get(`http://ip-api.com/json/${ip}?lang=zh-CN`);
-      return response.data;
-    } catch (error) {
-      console.error("Failed to fetch IP geolocation:", error);
-      return null;
+  private isAuthRoute(url: string): boolean {
+    return url.startsWith('/api/auth/login') || url.startsWith('/api/auth/registerByEmail');
+  }
+
+  private async handleIpGeoLocation(ip: string, isAuthRoute: boolean) {
+    const redisKey = `${IP_GEO_REDIS_PREFIX}${ip}`;
+    
+    // 对于登录/注册请求，直接添加到队列
+    if (isAuthRoute) {
+      await this.geoQueue.add(IP_GEO_FETCH_JOB, { 
+        ip,
+        redisKey,
+        ttl: IP_GEO_REDIS_TTL
+      });
+      return;
+    }
+
+    // 对于其他请求，先查Redis
+    const geoInfo = await this.redisService.get(redisKey);
+    if (!geoInfo) {
+      // Redis中没有，添加到队列
+      await this.geoQueue.add(IP_GEO_FETCH_JOB, { 
+        ip,
+        redisKey,
+        ttl: IP_GEO_REDIS_TTL
+      });
     }
   }
 
   intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
-    // 检查是否有 @SkipLog 装饰器
     const skipLog = this.reflector.get<boolean>(
       SKIP_SYSTEM_LOG_KEY,
       context.getHandler(),
@@ -66,12 +103,16 @@ export class SystemLogInterceptor implements NestInterceptor {
 
     const startTime = Date.now();
     const request = context.switchToHttp().getRequest<RequestWithUser>();
-    const clientIp = this.getClientIp(request);  // 这里获取 IP
-    
+    const clientIp = this.getClientIp(request);
     const { user, method, originalUrl, headers } = request;
 
+    // 处理IP地理位置信息
+    const isAuthRoute = this.isAuthRoute(originalUrl);
+    this.handleIpGeoLocation(clientIp, isAuthRoute).catch(error => {
+      console.error('Failed to handle IP geolocation:', error);
+    });
 
-    // 跳过系统日志相关的请求，避免循环记录
+    // 跳过系统日志相关的请求
     if (originalUrl.startsWith('/api/system-log')) {
       return next.handle();
     }
@@ -87,10 +128,12 @@ export class SystemLogInterceptor implements NestInterceptor {
         next: async (responseBody) => {
           const response = context.switchToHttp().getResponse<Response>();
           const duration = Date.now() - startTime;
-          const geoLocation = await this.getGeoLocation(clientIp);
-          
 
           try {
+            // 尝试从 Redis 获取地理位置信息
+            const redisKey = `${IP_GEO_REDIS_PREFIX}${clientIp}`;
+            const locationData = await this.redisService.get(redisKey);
+
             const logData: SystemLogData = {
               userId: user?.id || null,
               username: this.getUserDisplayName(user),
@@ -101,7 +144,14 @@ export class SystemLogInterceptor implements NestInterceptor {
               userAgent: headers['user-agent'],
               duration: duration,
               errorMsg: null,
+              ...(locationData && { location: locationData }),
+              requestData: {
+                headers: this.filterSensitiveHeaders(headers),
+                query: request.query,
+                language: headers['accept-language'],
+              }
             };
+
             await this.logQueue.add(SYSTEM_LOG_CREATE_JOB, logData);
           } catch (error) {
             console.error('Failed to add log to queue:', error);
@@ -109,9 +159,8 @@ export class SystemLogInterceptor implements NestInterceptor {
         },
         error: async (error) => {
           const duration = Date.now() - startTime;
-
           try {
-            await this.logQueue.add('create', {
+            await this.logQueue.add(SYSTEM_LOG_CREATE_JOB, {
               userId: user?.id || null,
               username: this.getUserDisplayName(user),
               requestUrl: originalUrl,
@@ -129,4 +178,13 @@ export class SystemLogInterceptor implements NestInterceptor {
       }),
     );
   }
-} 
+
+  // 添加辅助方法来过滤敏感头信息
+  private filterSensitiveHeaders(headers: any) {
+    const filtered = { ...headers };
+    // 移除敏感信息
+    delete filtered.authorization;
+    delete filtered.cookie;
+    return filtered;
+  }
+}

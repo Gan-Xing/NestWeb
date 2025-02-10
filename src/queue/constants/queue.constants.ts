@@ -49,4 +49,26 @@ export const MONITORING_THRESHOLDS = {
 
 // 添加系统日志相关常量
 export const SYSTEM_LOG_QUEUE = 'system-log';
-export const SYSTEM_LOG_CREATE_JOB = 'create'; 
+export const SYSTEM_LOG_CREATE_JOB = 'create';
+
+// IP地理位置队列相关常量
+export const IP_GEO_QUEUE = 'ip-geo';
+export const IP_GEO_FETCH_JOB = 'fetch-geo';
+
+// Redis 相关常量
+export const IP_GEO_REDIS_PREFIX = 'ip:geo:';
+export const IP_GEO_REDIS_TTL = 60 * 60 * 24 * 7; // 7天
+
+// IP地理位置队列配置
+export const IP_GEO_QUEUE_CONFIG = {
+  // 重试配置
+  attempts: 3,  // 最大重试次数
+  backoff: {    // 重试延迟策略
+    type: 'exponential',
+    delay: 1000 // 初始延迟1秒
+  },
+  // 移除已完成的任务
+  removeOnComplete: true,
+  // 移除失败的任务
+  removeOnFail: false
+};

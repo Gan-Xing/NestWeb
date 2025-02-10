@@ -99,7 +99,7 @@ model Image {
 
 model SystemLog {
   id          Int      @id @default(autoincrement())
-  userId      Int      // 操作用户ID
+  userId      Int      // 保持必填
   username    String   // 操作用户名，冗余存储方便查询
   requestUrl  String   // 请求路径
   method      String   // 请求方法 GET/POST/PUT/DELETE
@@ -109,8 +109,10 @@ model SystemLog {
   userAgent   String?  // 用户代理信息，可选
   duration    Int      // 请求耗时(ms)
   createdAt   DateTime @default(now())
-
-  user        User?    @relation(fields: [userId], references: [id])
+  
+  location    Json?    // 存储 IP 地址解析后的地理信息
+  requestData Json?    // 存储请求的额外信息
+  user        User     @relation(fields: [userId], references: [id])  // 改为必填
 
   @@index([userId, createdAt])
   @@index([requestUrl, method])

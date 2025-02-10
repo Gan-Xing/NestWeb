@@ -7,6 +7,15 @@ import { EmailModule } from '../email/email.module';
 import { PrometheusModule, makeCounterProvider, makeHistogramProvider } from '@willsoto/nestjs-prometheus';
 import { PrometheusService } from '../monitoring/prometheus.service';
 import { QUEUE_NAMES, QUEUE_CONFIG } from './constants/queue.constants';
+import { BullModule } from '@nestjs/bull';
+import { RedisModule } from 'src/redis/redis.module';
+import { PrismaModule } from 'src/prisma/prisma.module';
+import { IpGeoProcessor } from './processors/ip-geo.processor';
+import { 
+  IP_GEO_QUEUE, 
+  IP_GEO_QUEUE_CONFIG,
+  SYSTEM_LOG_QUEUE 
+} from './constants/queue.constants';
 
 @Module({
   imports: [
@@ -36,6 +45,17 @@ import { QUEUE_NAMES, QUEUE_CONFIG } from './constants/queue.constants';
     }),
     PrometheusModule.register(),
     forwardRef(() => EmailModule),
+    BullModule.registerQueue(
+      {
+        name: SYSTEM_LOG_QUEUE
+      },
+      {
+        name: IP_GEO_QUEUE,
+        defaultJobOptions: IP_GEO_QUEUE_CONFIG
+      }
+    ),
+    RedisModule,
+    PrismaModule
   ],
   providers: [
     EmailProducer,
@@ -62,7 +82,8 @@ import { QUEUE_NAMES, QUEUE_CONFIG } from './constants/queue.constants';
       labelNames: ['type'],
       buckets: [0.1, 0.5, 1, 2, 5],
     }),
+    IpGeoProcessor
   ],
-  exports: [EmailProducer],
+  exports: [EmailProducer, BullModule]
 })
 export class QueueModule {} 
