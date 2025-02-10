@@ -1,4 +1,5 @@
 import { NestFactory } from '@nestjs/core';
+import { NestExpressApplication } from '@nestjs/platform-express'; // ✅ 确保使用 Express
 import { INestApplication } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from './app.module';
@@ -15,7 +16,7 @@ function setupSwagger(app: INestApplication) {
 }
 
 async function bootstrap() {
-	const app = await NestFactory.create(AppModule);
+	const app = await NestFactory.create<NestExpressApplication>(AppModule); // ✅ 明确指定 Express
 
 	app.enableCors({
 		origin: '*',
@@ -24,6 +25,7 @@ async function bootstrap() {
 		optionsSuccessStatus: 204,
 		credentials: true
 	});
+	app.set('trust proxy', true);
 	// 在应用启动前检查 DATABASE_URL 环境变量
 	if (!process.env.DATABASE_URL) {
 		console.error('Error: DATABASE_URL is not set.');
@@ -33,7 +35,6 @@ async function bootstrap() {
 	}
 
 	setupSwagger(app);
-
 	await app.listen(3030);
 }
 

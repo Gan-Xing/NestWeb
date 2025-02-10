@@ -1,7 +1,9 @@
 import { IsOptional, IsString, IsInt, IsDateString } from 'class-validator';
+import { Type } from 'class-transformer';
 
 export class QueryLogDto {
   @IsOptional()
+  @Type(() => Number)
   @IsInt()
   userId?: number;
 
@@ -18,6 +20,7 @@ export class QueryLogDto {
   method?: string;
 
   @IsOptional()
+  @Type(() => Number)
   @IsInt()
   status?: number;
 
@@ -30,10 +33,12 @@ export class QueryLogDto {
   endTime?: string;
 
   @IsOptional()
+  @Type(() => Number)
   @IsInt()
   page?: number;
 
   @IsOptional()
+  @Type(() => Number)
   @IsInt()
   pageSize?: number;
 } 
