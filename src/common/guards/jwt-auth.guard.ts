@@ -26,6 +26,11 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
 			}
 		}
 
+		const request = context.switchToHttp().getRequest();
+		if (request?.path === '/metrics') {
+			return true;
+		}
+
 		const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
 			context.getHandler(),
 			context.getClass(),

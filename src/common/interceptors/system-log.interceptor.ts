@@ -106,6 +106,10 @@ export class SystemLogInterceptor implements NestInterceptor {
     const clientIp = this.getClientIp(request);
     const { user, method, originalUrl, headers } = request;
 
+    if (originalUrl === '/metrics' || !user?.id) {
+      return next.handle();
+    }
+
     // 处理IP地理位置信息
     const isAuthRoute = this.isAuthRoute(originalUrl);
     this.handleIpGeoLocation(clientIp, isAuthRoute).catch(error => {

@@ -46,6 +46,10 @@ export class LoggingInterceptor implements NestInterceptor {
     const now = Date.now();
     const user = req.user ? req.user : 'Anonymous';
 
+    if (req.path === '/metrics') {
+      return next.handle();
+    }
+
     // Log the request
     this.logger.log(`User ${user} Incoming request: ${method} ${url}`);
 

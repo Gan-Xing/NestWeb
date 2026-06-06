@@ -12,6 +12,14 @@ import * as sharp from 'sharp';
 
 const execPromise = promisify(exec);
 
+function redactMinioConfig(config: Record<string, unknown>) {
+  return {
+    ...config,
+    accessKey: config.accessKey ? '[redacted]' : undefined,
+    secretKey: config.secretKey ? '[redacted]' : undefined,
+  };
+}
+
 @Injectable()
 export class MinioStorageService implements IStorageService, OnModuleInit {
   private minioClient: Client;
@@ -75,8 +83,8 @@ export class MinioStorageService implements IStorageService, OnModuleInit {
       };
 
       console.log('MinIO Configuration:', {
-        external: { ...externalConfig, bucket: this.defaultBucket },
-        internal: { ...internalConfig, bucket: this.defaultBucket }
+        external: redactMinioConfig({ ...externalConfig, bucket: this.defaultBucket }),
+        internal: redactMinioConfig({ ...internalConfig, bucket: this.defaultBucket })
       });
 
       // 初始化两个客户端
@@ -145,7 +153,9 @@ export class MinioStorageService implements IStorageService, OnModuleInit {
 
       try {
         const convertStartTime = Date.now();
-        await execPromise(`magick "${tempHeicPath}" -quality 85 "${tempJpegPath}"`);
+        const { stdout } = await execPromise('command -v magick || command -v convert');
+        const imageConverter = stdout.trim();
+        await execPromise(`"${imageConverter}" "${tempHeicPath}" -quality 85 "${tempJpegPath}"`);
         
         const stats = await fs.stat(tempJpegPath);
         if (stats.size > 0) {

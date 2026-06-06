@@ -10,20 +10,18 @@ import { I18nService } from 'nestjs-i18n';
 @Injectable()
 export class EmailService {
   private readonly logger = new Logger(EmailService.name);
-  private transporter: nodemailer.Transporter;
+  private transporter?: nodemailer.Transporter;
 
   constructor(
     private readonly redisService: RedisService,
     private readonly emailProducer: EmailProducer,
     private readonly i18n: I18nService,
   ) {
-    // 验证必要的环境变量
     if (!process.env.GMAIL_USER || !process.env.GMAIL_APP_PASSWORD) {
-      this.logger.error('Missing required environment variables: GMAIL_USER and/or GMAIL_APP_PASSWORD');
-      throw new Error('Email service configuration error: Missing Gmail credentials');
+      this.logger.warn('Email transporter is disabled: GMAIL_USER and/or GMAIL_APP_PASSWORD is missing');
+      return;
     }
 
-    // 配置 nodemailer transporter
     this.transporter = nodemailer.createTransport({
       service: "gmail",
       auth: {
@@ -47,6 +45,10 @@ export class EmailService {
    */
   async sendMail(mailOptions: IEmailMessage): Promise<void> {
     try {
+      if (!this.transporter) {
+        throw new Error('Email transporter is not configured');
+      }
+
       this.logger.log(`Attempting to send email to: ${mailOptions.to}`);
       this.logger.debug('Mail options:', { 
         to: mailOptions.to,

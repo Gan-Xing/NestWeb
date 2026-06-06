@@ -43,6 +43,11 @@ export class TransformInterceptor<T>
     context: ExecutionContext,
     next: CallHandler,
   ): Observable<Response<T>> {
+    const request = context.switchToHttp().getRequest();
+    if (request?.path === '/metrics') {
+      return next.handle();
+    }
+
     return next.handle().pipe(
       map((data) => ({
         statusCode: context.switchToHttp().getResponse().statusCode,
