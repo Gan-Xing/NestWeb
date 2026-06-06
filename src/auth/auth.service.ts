@@ -1,7 +1,7 @@
 //src/auth/auth.service.ts
 import { Injectable, NotFoundException, UnauthorizedException, ConflictException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { JwtService } from '@nestjs/jwt';
+import { JwtService, type JwtSignOptions } from '@nestjs/jwt';
 import { User } from '@prisma/client';
 import { JwtConfig, SecurityConfig, getRandomByte, RegisterDto, Token } from 'src/common';
 import { PrismaService } from 'src/prisma/prisma.service';
@@ -258,7 +258,7 @@ export class AuthService {
 		const securityConfig = this.configService.get<SecurityConfig>('security');
 		const token = this.jwtService.sign(payload, {
 			secret: jwtConfig.refreshSecret,
-			expiresIn: securityConfig.refreshIn
+			expiresIn: securityConfig.refreshIn as JwtSignOptions['expiresIn']
 		});
 		const decoded = jwt_decode<{ exp: number }>(token);
 		return {

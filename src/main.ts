@@ -18,6 +18,7 @@ function setupSwagger(app: INestApplication) {
 async function bootstrap() {
 	const app = await NestFactory.create<NestExpressApplication>(AppModule); // ✅ 明确指定 Express
 
+	app.set('query parser', 'extended');
 	app.enableCors({
 		origin: '*',
 		methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',

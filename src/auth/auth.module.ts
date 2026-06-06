@@ -1,6 +1,6 @@
 import { Module, forwardRef } from '@nestjs/common';
 import { PassportModule } from '@nestjs/passport';
-import { JwtModule } from '@nestjs/jwt';
+import { JwtModule, type JwtModuleOptions, type JwtSignOptions } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtConfig, SecurityConfig, JwtStrategy } from 'src/common';
 import { PrismaModule } from 'src/prisma/prisma.module';
@@ -28,14 +28,14 @@ import { HttpModule } from '@nestjs/axios';
 		WechatModule,
 		forwardRef(() => UsersModule),
 		JwtModule.registerAsync({
-			useFactory: async (configService: ConfigService) => {
+			useFactory: async (configService: ConfigService): Promise<JwtModuleOptions> => {
 				const securityConfig =
 					configService.get<SecurityConfig>('security');
 				const jwtConfig = configService.get<JwtConfig>('jwt');
 				return {
 					secret: jwtConfig.accessSecret,
 					signOptions: {
-						expiresIn: securityConfig.expiresIn // e.g. 30s, 7d, 24h
+						expiresIn: securityConfig.expiresIn as JwtSignOptions['expiresIn'] // e.g. 30s, 7d, 24h
 					}
 				};
 			},
