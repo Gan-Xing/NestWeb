@@ -14,7 +14,7 @@ import { WechatService } from 'src/wechat/wechat.service';
 import { UsersService } from 'src/users/users.service';
 import { HttpService } from '@nestjs/axios';
 import { RegisterByEmailDto, SignUpFormData, ValidateTokenDto } from './dto';
-import jwt_decode from 'jwt-decode';
+import { jwtDecode } from 'jwt-decode';
 
 @Injectable()
 export class AuthService {
@@ -246,7 +246,7 @@ export class AuthService {
 
 	private generateAccessToken(payload: { userId: number }) {
 		const token = this.jwtService.sign(payload);
-		const decoded = jwt_decode<{ exp: number }>(token);
+		const decoded = jwtDecode<{ exp: number }>(token);
 		return {
 			token,
 			expiresIn: decoded.exp * 1000 // 将秒转换为毫秒
@@ -260,7 +260,7 @@ export class AuthService {
 			secret: jwtConfig.refreshSecret,
 			expiresIn: securityConfig.refreshIn as JwtSignOptions['expiresIn']
 		});
-		const decoded = jwt_decode<{ exp: number }>(token);
+		const decoded = jwtDecode<{ exp: number }>(token);
 		return {
 			token,
 			expiresIn: decoded.exp * 1000 // 将秒转换为毫秒

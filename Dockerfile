@@ -1,4 +1,4 @@
-FROM node:20-slim AS base
+FROM node:24-slim AS base
 
 RUN apt-get update && apt-get install -y \
     ca-certificates \
@@ -12,6 +12,9 @@ WORKDIR /app
 RUN npm install -g pnpm@9.15.4 && npm cache clean --force
 
 FROM base AS builder
+
+ARG DATABASE_URL=postgresql://nestweb:nestweb_password@postgres:5432/nestweb?schema=public
+ENV DATABASE_URL=$DATABASE_URL
 
 COPY package.json pnpm-lock.yaml ./
 RUN pnpm install --frozen-lockfile
