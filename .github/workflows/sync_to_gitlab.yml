@@ -1,9 +1,7 @@
 name: Sync to GitLab
 
 on:
-          push:
-                    branches:
-                              - main # 仅在 main 分支上触发
+          workflow_dispatch:
 
 jobs:
           sync:
