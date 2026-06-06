@@ -31,7 +31,7 @@ export class EmailService {
     });
 
     // 验证transporter配置
-    this.transporter.verify((error, success) => {
+    this.transporter.verify((error) => {
       if (error) {
         this.logger.error('Failed to initialize email transporter:', error);
       } else {

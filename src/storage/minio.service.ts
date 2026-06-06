@@ -2,7 +2,6 @@ import { Injectable, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Client } from 'minio';
 import { IStorageService } from './storage.interface';
-import { extname } from 'path';
 import { exiftool } from 'exiftool-vendored';
 import { exec } from 'child_process';
 import { promisify } from 'util';
@@ -51,7 +50,7 @@ export class MinioStorageService implements IStorageService, OnModuleInit {
             useSSL,
             publicUrl
           });
-        } catch (e) {
+        } catch {
           console.warn('Invalid MINIO_PUBLIC_URL, falling back to default endpoint');
         }
       }

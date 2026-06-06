@@ -129,7 +129,7 @@ export class SystemLogInterceptor implements NestInterceptor {
 
     return next.handle().pipe(
       tap({
-        next: async (responseBody) => {
+        next: async () => {
           const response = context.switchToHttp().getResponse<Response>();
           const duration = Date.now() - startTime;
 

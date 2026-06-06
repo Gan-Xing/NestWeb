@@ -2,7 +2,6 @@ import { Module, DynamicModule, Global } from '@nestjs/common';
 import { RedisService } from './redis.service';
 import { RedisConfig } from 'src/common';
 import Redis from 'ioredis';
-import { ConfigService } from '@nestjs/config';
 
 @Global()
 @Module({})

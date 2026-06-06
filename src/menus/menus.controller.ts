@@ -9,7 +9,6 @@ import {
   ParseIntPipe,
   ParseArrayPipe,
   Query,
-  Req,
   UseGuards,
 } from '@nestjs/common';
 import { MenusService } from './menus.service';

@@ -29,10 +29,6 @@ export class AuthController {
 	@HttpCode(HttpStatus.OK)
 	async exchangeCodeForUserId(@Body() body: any): Promise<any> {
 		const code = body.code;
-		const { openid, session_key, unionid } = await this.auth.exchangeCodeForUserId(
-			code
-		);
-
 		return await this.auth.exchangeCodeForUserId(code);
 	}
 

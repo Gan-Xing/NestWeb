@@ -61,7 +61,7 @@ export class RedisService {
 		if (data) {
 			try {
 				return JSON.parse(data.toString());
-			} catch (e) {
+			} catch {
 				return data.toString();
 			}
 		}

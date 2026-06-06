@@ -22,7 +22,7 @@ export class SmsService {
 		const accessKeySecret = this.configService.get<string>(
 			'ALIBABA_CLOUD_ACCESS_KEY_SECRET'
 		);
-		let config = new $OpenApi.Config({
+		const config = new $OpenApi.Config({
 			accessKeyId: accessKeyId,
 			accessKeySecret: accessKeySecret
 		});
@@ -30,7 +30,7 @@ export class SmsService {
 		this.client = new Dypnsapi20170525(config); // 初始化客户端
 	}
 
-	async sendSMSVerificationCode(PhoneNumber: string): Promise<boolean> {
+	async sendSMSVerificationCode(_phoneNumber: string): Promise<boolean> {
 		const expirationTime = 15; // 短信验证码有效期，单位为分钟
 		// 创建发送短信验证码请求
 		const phoneOptions = {
@@ -43,7 +43,7 @@ export class SmsService {
 			codeLength: 6
 		};
 		console.log('=====================手机参数', phoneOptions);
-		const sendSmsVerifyCodeRequest = new $Dypnsapi20170525.SendSmsVerifyCodeRequest(
+		const _sendSmsVerifyCodeRequest = new $Dypnsapi20170525.SendSmsVerifyCodeRequest(
 			phoneOptions
 		);
 
@@ -64,13 +64,13 @@ export class SmsService {
 		phoneNumber: string,
 		verifyCode: string
 	): Promise<boolean> {
-		let checkSmsVerifyCodeRequest = new $Dypnsapi20170525.CheckSmsVerifyCodeRequest(
+		const _checkSmsVerifyCodeRequest = new $Dypnsapi20170525.CheckSmsVerifyCodeRequest(
 			{
 				phoneNumber,
 				verifyCode
 			}
 		);
-		let runtime = new $Util.RuntimeOptions({});
+		const _runtime = new $Util.RuntimeOptions({});
 		try {
 			// 复制代码运行请自行打印 API 的返回值
 			// const res = await this.client.checkSmsVerifyCodeWithOptions(

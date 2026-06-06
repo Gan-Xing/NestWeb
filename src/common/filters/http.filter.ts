@@ -66,7 +66,7 @@ export class HttpFilter implements ExceptionFilter {
     });
   }
 
-  private handleRpcException(exception: unknown, host: ArgumentsHost) {
+  private handleRpcException(exception: unknown, _host: ArgumentsHost) {
     this.logger.error('RPC Exception:', {
       error: exception instanceof Error ? exception.message : 'Unknown error',
       stack: exception instanceof Error ? exception.stack : undefined,

@@ -9,7 +9,6 @@ import {
 	SessionResult,
 	WeChatModuleOptions
 } from '@ganxing/wechat';
-import { Params } from '@alicloud/openapi-client';
 
 @Injectable()
 export class WechatService {
@@ -41,8 +40,8 @@ export class WechatService {
 
 	async getUnionIdByCode(
 		code: string,
-		appId?: string,
-		secret?: string
+		_appId?: string,
+		_secret?: string
 	): Promise<SessionResult> {
 		return await this.miniProgramService.code2Session(code);
 	}

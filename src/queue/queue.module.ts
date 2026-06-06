@@ -6,7 +6,6 @@ import { EmailConsumer } from './consumers/email.consumer';
 import { EmailModule } from '../email/email.module';
 import { PrometheusModule, makeCounterProvider, makeHistogramProvider } from '@willsoto/nestjs-prometheus';
 import { PrometheusService } from '../monitoring/prometheus.service';
-import { QUEUE_NAMES, QUEUE_CONFIG } from './constants/queue.constants';
 import { BullModule } from '@nestjs/bull';
 import { RedisModule } from 'src/redis/redis.module';
 import { PrismaModule } from 'src/prisma/prisma.module';

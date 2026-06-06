@@ -1,5 +1,5 @@
 //src/auth/auth.service.ts
-import { Injectable, NotFoundException, UnauthorizedException, ConflictException } from '@nestjs/common';
+import { Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService, type JwtSignOptions } from '@nestjs/jwt';
 import { User } from '@prisma/client';
@@ -40,7 +40,7 @@ export class AuthService {
 		try {
 			const qrCodeData = await this.getMiniProgramQRCode(scene); // 请求微信接口获取二维码
 			return { qrCodeData }; // 返回二维码的二进制数据
-		} catch (error) {
+		} catch {
 			throw new Error('Error generating QR code');
 		}
 	}
@@ -60,7 +60,7 @@ export class AuthService {
 				expires_in
 			);
 			return access_token;
-		} catch (error) {
+		} catch {
 			throw new Error('Unable to fetch access token from WeChat');
 		}
 	}
@@ -83,7 +83,7 @@ export class AuthService {
 					}
 				);
 			return response.data;
-		} catch (error) {
+		} catch {
 			throw new Error('Unable to fetch QR code from WeChat');
 		}
 	}
@@ -106,14 +106,13 @@ export class AuthService {
 			return response.data;
 
 			// 这里返回的数据包含 openid 和 unionid（如果有）
-		} catch (error) {
+		} catch {
 			throw new Error('Unable to fetch user info from WeChat');
 		}
 	}
 
 	async miniprogramLogin(code: string): Promise<Token> {
-		const { openid, session_key, unionid } =
-			await this.wechatService.getUnionIdByCode(code);
+		const { unionid } = await this.wechatService.getUnionIdByCode(code);
 		let user = await this.userService.findOneByWechatId(unionid);
 		if (!user) {
 			user = await this.userService.createUserWithUnionId(unionid);

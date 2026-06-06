@@ -1,7 +1,7 @@
 import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR, APP_PIPE, Reflector } from '@nestjs/core';
-import { ClassSerializerInterceptor, Module, OnModuleInit, ValidationPipe,} from '@nestjs/common';
+import { ClassSerializerInterceptor, Module, ValidationPipe,} from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { I18nModule, AcceptLanguageResolver, QueryResolver, HeaderResolver, I18nService} from 'nestjs-i18n';
+import { I18nModule, AcceptLanguageResolver, QueryResolver, HeaderResolver} from 'nestjs-i18n';
 import {
 	Config,
 	JwtAuthGuard,

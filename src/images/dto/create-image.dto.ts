@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsString, IsArray, IsNotEmpty, IsOptional, IsNumber, IsObject, IsEnum } from 'class-validator';
-import { ImageThumbnail, ImageLocation } from '../interfaces/image.interface';
+import { ImageThumbnail } from '../interfaces/image.interface';
 
 export class LocationDto {
   @ApiProperty({ description: '纬度' })
