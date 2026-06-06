@@ -1,12 +1,16 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { PermissionsService } from './permissions.service';
+import { mockProviderFactories } from '../../test/unit-provider-mocks';
 
 describe('PermissionsService', () => {
   let service: PermissionsService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [PermissionsService],
+      providers: [
+        PermissionsService,
+        mockProviderFactories.prismaService(),
+      ],
     }).compile();
 
     service = module.get<PermissionsService>(PermissionsService);
