@@ -1,5 +1,6 @@
 import { NestFactory } from "@nestjs/core";
 import { NestExpressApplication } from "@nestjs/platform-express"; // ✅ 确保使用 Express
+import helmet from "helmet";
 import { AppModule } from "./app.module";
 import { setupOpenApi } from "./openapi";
 import {
@@ -13,6 +14,11 @@ async function bootstrap() {
 
   const app = await NestFactory.create<NestExpressApplication>(AppModule); // ✅ 明确指定 Express
 
+  const openApiEnabled = shouldSetupOpenApi();
+  app.disable("x-powered-by");
+  app.use(
+    helmet(openApiEnabled ? { contentSecurityPolicy: false } : undefined),
+  );
   app.set("query parser", "extended");
   const corsOrigin = buildCorsOrigin();
   if (corsOrigin !== false) {
@@ -26,7 +32,7 @@ async function bootstrap() {
   }
   app.set("trust proxy", true);
 
-  if (shouldSetupOpenApi()) {
+  if (openApiEnabled) {
     setupOpenApi(app);
   }
   await app.listen(Number(process.env.PORT) || 3030);

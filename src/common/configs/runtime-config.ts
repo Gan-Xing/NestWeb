@@ -8,6 +8,10 @@ type MetricsRequestLike = {
     remoteAddress?: string;
   };
 };
+type ThrottleRule = {
+  limit: number;
+  ttl: number;
+};
 
 const insecureSecretValues = new Set([
   "defaultAccessSecret",
@@ -47,6 +51,23 @@ export function shouldSetupOpenApi(env: RuntimeEnv = process.env) {
   }
 
   return !isProduction(env) && env.SWAGGER_ENABLED !== "false";
+}
+
+export function buildThrottlerOptions(env: RuntimeEnv = process.env) {
+  return [
+    {
+      name: "default",
+      ttl: parsePositiveIntegerEnv(env.RATE_LIMIT_WINDOW_MS, 60_000),
+      limit: parsePositiveIntegerEnv(env.RATE_LIMIT_MAX, 120),
+    },
+  ];
+}
+
+export function buildAuthThrottleRule(env: RuntimeEnv = process.env): ThrottleRule {
+  return {
+    limit: parsePositiveIntegerEnv(env.AUTH_RATE_LIMIT_MAX, 10),
+    ttl: parsePositiveIntegerEnv(env.AUTH_RATE_LIMIT_WINDOW_MS, 60_000),
+  };
 }
 
 export function validateRuntimeConfig(env: RuntimeEnv = process.env) {
@@ -92,6 +113,16 @@ function assertSecureSecret(name: string, value?: string) {
   if (insecureSecretValues.has(value) || value.length < 32) {
     throw new Error(`${name} must be a strong production secret.`);
   }
+}
+
+function parsePositiveIntegerEnv(value: string | undefined, fallback: number) {
+  const parsed = Number(value);
+
+  if (!Number.isInteger(parsed) || parsed <= 0) {
+    return fallback;
+  }
+
+  return parsed;
 }
 
 function isPrivateOrLoopbackAddress(address?: string) {

@@ -1,5 +1,7 @@
 import {
+  buildAuthThrottleRule,
   buildCorsOrigin,
+  buildThrottlerOptions,
   isMetricsRequestAllowed,
   shouldSetupOpenApi,
   validateRuntimeConfig,
@@ -58,6 +60,36 @@ describe("runtime security config", () => {
         CORS_ORIGINS: "https://a.example.com, https://b.example.com",
       }),
     ).toEqual(["https://a.example.com", "https://b.example.com"]);
+  });
+
+  it("builds rate limit defaults with positive env overrides", () => {
+    expect(buildAuthThrottleRule()).toEqual({
+      limit: 10,
+      ttl: 60_000,
+    });
+    expect(
+      buildThrottlerOptions({
+        RATE_LIMIT_MAX: "300",
+        RATE_LIMIT_WINDOW_MS: "120000",
+        AUTH_RATE_LIMIT_MAX: "6",
+        AUTH_RATE_LIMIT_WINDOW_MS: "30000",
+      }),
+    ).toEqual([
+      {
+        name: "default",
+        ttl: 120_000,
+        limit: 300,
+      },
+    ]);
+    expect(
+      buildAuthThrottleRule({
+        AUTH_RATE_LIMIT_MAX: "6",
+        AUTH_RATE_LIMIT_WINDOW_MS: "30000",
+      }),
+    ).toEqual({
+      limit: 6,
+      ttl: 30_000,
+    });
   });
 
   it("protects metrics from public clients while allowing private networks", () => {

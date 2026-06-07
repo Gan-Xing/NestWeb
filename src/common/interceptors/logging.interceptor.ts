@@ -8,6 +8,7 @@ import {
 import { Observable, throwError } from 'rxjs';
 import { catchError, tap } from 'rxjs/operators';
 import { Request, Response } from 'express';
+import { redactSensitiveText, redactSensitiveUrl } from '../utils/sensitive-data';
 
 type ContextType = 'http' | 'rmq' | 'rpc' | 'ws' | 'graphql';
 
@@ -42,9 +43,9 @@ export class LoggingInterceptor implements NestInterceptor {
     const req = context.switchToHttp().getRequest<Request>();
     const res = context.switchToHttp().getResponse<Response>();
     const method = req.method;
-    const url = req.url;
+    const url = redactSensitiveUrl(req.originalUrl ?? req.url);
     const now = Date.now();
-    const user = req.user ? req.user : 'Anonymous';
+    const user = this.getUserLabel(req.user);
 
     if (req.path === '/metrics') {
       return next.handle();
@@ -66,7 +67,7 @@ export class LoggingInterceptor implements NestInterceptor {
       catchError((err) => {
         this.logger.error(
           `User ${user} Error processing request: ${method} ${url}`,
-          err.stack,
+          redactSensitiveText(err.stack),
         );
         return throwError(err);
       }),
@@ -98,5 +99,31 @@ export class LoggingInterceptor implements NestInterceptor {
         return throwError(err);
       }),
     );
+  }
+
+  private getUserLabel(user: unknown) {
+    if (!user) {
+      return 'Anonymous';
+    }
+
+    if (typeof user !== 'object') {
+      return String(user);
+    }
+
+    const { id, username, email } = user as {
+      id?: number | string;
+      username?: string;
+      email?: string;
+    };
+
+    if (username) {
+      return id ? `${username}#${id}` : username;
+    }
+
+    if (email) {
+      return id ? `${email}#${id}` : email;
+    }
+
+    return id ? `user#${id}` : 'Authenticated';
   }
 }

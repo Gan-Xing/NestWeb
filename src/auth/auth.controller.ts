@@ -1,20 +1,22 @@
 // src/auth/auth.controller.ts
 import { Body, Controller, Post, HttpCode, HttpStatus, Request, Get } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import {
 	ApiBadRequestResponse,
 	ApiOkResponse,
 	ApiTags,
 	ApiUnauthorizedResponse,
 	ApiBearerAuth,
-	ApiNotFoundResponse,
 	ApiCreatedResponse
 } from '@nestjs/swagger';
 import { Public, RegisterDto, Token } from 'src/common';
 import { AuthService } from './auth.service';
 import { LoginDto, RefreshTokenDto, SignUpFormData, ValidateTokenDto,RegisterByEmailDto } from './dto';
+import { buildAuthThrottleRule } from 'src/common/configs/runtime-config';
 
 @Controller('api/auth')
 @ApiTags('auth')
+@Throttle({ default: buildAuthThrottleRule() })
 export class AuthController {
 	constructor(private readonly auth: AuthService) {}
 
@@ -44,8 +46,7 @@ export class AuthController {
 	@Post('login')
 	@ApiOkResponse({ type: Token })
 	@ApiBadRequestResponse({ description: 'Invalid request body' })
-	@ApiUnauthorizedResponse({ description: 'Invalid password' })
-	@ApiNotFoundResponse({ description: 'No user found for email' })
+	@ApiUnauthorizedResponse({ description: 'Invalid credentials' })
 	login(@Body() { email, password }: LoginDto) {
 		return this.auth.login(email, password);
 	}

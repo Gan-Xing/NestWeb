@@ -1,6 +1,7 @@
 import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR, APP_PIPE, Reflector } from '@nestjs/core';
 import { ClassSerializerInterceptor, Module, ValidationPipe,} from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { I18nModule, AcceptLanguageResolver, QueryResolver, HeaderResolver} from 'nestjs-i18n';
 import {
 	Config,
@@ -11,6 +12,7 @@ import {
 	HttpFilter,
 	initializeRedisClients
 } from 'src/common';
+import { buildThrottlerOptions } from './common/configs/runtime-config';
 import { AppController } from 'src/app.controller';
 import { AppService } from 'src/app.service';
 import { PrismaModule } from 'src/prisma/prisma.module';
@@ -51,6 +53,7 @@ import { SystemLogModule } from './system-log/system-log.module';
 		ImagesModule,
 		QueueModule,
 		DiagnosticsModule,
+		ThrottlerModule.forRoot(buildThrottlerOptions()),
 		ConfigModule.forRoot({
 			isGlobal: true,
 			load: [Config]
@@ -90,6 +93,10 @@ import { SystemLogModule } from './system-log/system-log.module';
 		{
 			provide: APP_PIPE,
 			useFactory: () => new ValidationPipe({ whitelist: true })
+		},
+		{
+			provide: APP_GUARD,
+			useClass: ThrottlerGuard
 		},
 		{
 			provide: APP_GUARD,

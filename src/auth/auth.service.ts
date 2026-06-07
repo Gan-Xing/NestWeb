@@ -1,5 +1,5 @@
 //src/auth/auth.service.ts
-import { Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService, type JwtSignOptions } from '@nestjs/jwt';
 import { User } from '@prisma/client';
@@ -203,7 +203,7 @@ export class AuthService {
 
 		// If no user is found, throw an error
 		if (!user) {
-			throw new NotFoundException(`No user found for email: ${email}`);
+			throw new UnauthorizedException('Invalid credentials');
 		}
 
 		// Step 2: Check if the password is correct

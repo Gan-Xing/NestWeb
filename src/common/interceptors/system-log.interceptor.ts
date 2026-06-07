@@ -18,6 +18,7 @@ import {
 import { SKIP_SYSTEM_LOG_KEY } from 'src/common/decorators/skip-system-log.decorator';
 import { RedisService } from 'src/redis/redis.service';
 import { Logger } from '@nestjs/common';
+import { redactSensitiveObject, redactSensitiveText, redactSensitiveUrl } from 'src/common/utils/sensitive-data';
 
 export interface RequestWithUser extends Request {
   user?: User;
@@ -105,6 +106,7 @@ export class SystemLogInterceptor implements NestInterceptor {
     const request = context.switchToHttp().getRequest<RequestWithUser>();
     const clientIp = this.getClientIp(request);
     const { user, method, originalUrl, headers } = request;
+    const requestUrl = redactSensitiveUrl(originalUrl);
 
     if (originalUrl === '/metrics' || !user?.id) {
       return next.handle();
@@ -141,7 +143,7 @@ export class SystemLogInterceptor implements NestInterceptor {
             const logData: SystemLogData = {
               userId: user?.id || null,
               username: this.getUserDisplayName(user),
-              requestUrl: originalUrl,
+              requestUrl,
               method: method,
               status: response.statusCode,
               ip: clientIp,
@@ -151,7 +153,7 @@ export class SystemLogInterceptor implements NestInterceptor {
               ...(locationData && { location: locationData }),
               requestData: {
                 headers: this.filterSensitiveHeaders(headers),
-                query: request.query,
+                query: redactSensitiveObject(request.query),
                 language: headers['accept-language'],
               }
             };
@@ -167,10 +169,10 @@ export class SystemLogInterceptor implements NestInterceptor {
             await this.logQueue.add(SYSTEM_LOG_CREATE_JOB, {
               userId: user?.id || null,
               username: this.getUserDisplayName(user),
-              requestUrl: originalUrl,
+              requestUrl,
               method: method,
               status: error.status || 500,
-              errorMsg: error.message || 'Internal server error',
+              errorMsg: redactSensitiveText(error.message) || 'Internal server error',
               ip: clientIp,
               userAgent: headers['user-agent'],
               duration: duration,
@@ -185,10 +187,6 @@ export class SystemLogInterceptor implements NestInterceptor {
 
   // 添加辅助方法来过滤敏感头信息
   private filterSensitiveHeaders(headers: any) {
-    const filtered = { ...headers };
-    // 移除敏感信息
-    delete filtered.authorization;
-    delete filtered.cookie;
-    return filtered;
+    return redactSensitiveObject(headers);
   }
 }
