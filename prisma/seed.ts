@@ -25,15 +25,15 @@ const menuTree: MenuSeed[] = [
   {
     code: "dashboard",
     name: "工作台",
-    path: "/welcome",
-    icon: "smile",
+    path: "/dashboard",
+    icon: "DashboardOutlined",
     sort: 10,
     permissions: [
       {
         code: "dashboard.view",
         name: "查看工作台",
         action: "GET",
-        path: "/welcome",
+        path: "/dashboard",
       },
     ],
   },
