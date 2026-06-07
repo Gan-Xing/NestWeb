@@ -12,6 +12,9 @@ export class RoleEntity implements Role {
   id: number;
 
   @ApiProperty()
+  code: string;
+
+  @ApiProperty()
   name: string;
 
   @ApiProperty()

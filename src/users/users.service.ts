@@ -74,7 +74,7 @@ export class UsersService {
     );
     // 设定默认的用户角色
     const defaultRole = await this.prisma.role.findUnique({
-      where: { name: "User" },
+      where: { code: "user" },
     });
     if (!defaultRole) {
       throw new Error("Default role does not exist");
@@ -98,7 +98,7 @@ export class UsersService {
 
   async createUserWithUnionId(wechatId: string) {
     const defaultRole = await this.prisma.role.findUnique({
-      where: { name: "User" },
+      where: { code: "user" },
     });
     if (!defaultRole) {
       throw new Error("Default role does not exist");
@@ -288,18 +288,18 @@ export class UsersService {
       include: {
         roles: {
           select: {
-            name: true,
+            code: true,
           },
         },
       },
     });
 
-    if (!user?.roles.some((role) => role.name === "admin")) {
+    if (!user?.roles.some((role) => role.code === "admin")) {
       return;
     }
 
     const adminRole = await this.prisma.role.findUnique({
-      where: { name: "admin" },
+      where: { code: "admin" },
       select: { id: true },
     });
 

@@ -9,12 +9,13 @@ export class RolesService {
   constructor(private prisma: PrismaService) {}
 
   async create(createRoleDto: CreateRoleDto): Promise<Role> {
+    const permissionIds = createRoleDto.permissions ?? [];
     // 在这里处理一个权限ID数组
     const permissions = await this.prisma.permission.findMany({
-      where: { id: { in: createRoleDto.permissions } },
+      where: { id: { in: permissionIds } },
     });
 
-    if (permissions.length !== createRoleDto.permissions.length) {
+    if (permissions.length !== permissionIds.length) {
       throw new Error(`Some permissions do not exist`);
     }
 
@@ -111,7 +112,7 @@ export class RolesService {
     const roles = await this.prisma.role.findMany({
       where: { id: { in: ids } },
       select: {
-        name: true,
+        code: true,
       },
     });
 
@@ -119,8 +120,8 @@ export class RolesService {
   }
 }
 
-function assertRoleIsMutable(role?: { name: string } | null) {
-  if (role?.name !== "admin") {
+function assertRoleIsMutable(role?: { code: string } | null) {
+  if (role?.code !== "admin") {
     return;
   }
 

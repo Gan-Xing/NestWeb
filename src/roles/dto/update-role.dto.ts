@@ -1,9 +1,7 @@
-import { PartialType } from '@nestjs/mapped-types';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { IsString, IsOptional, IsInt, IsArray } from 'class-validator';
-import { CreateRoleDto } from './create-role.dto';
 
-export class UpdateRoleDto extends PartialType(CreateRoleDto) {
+export class UpdateRoleDto {
   @ApiPropertyOptional()
   @IsOptional()
   @IsString()

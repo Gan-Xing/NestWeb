@@ -37,17 +37,54 @@ describe("UsersService", () => {
   it("rejects removing the current admin role from self", async () => {
     (prisma.user.findUnique as jest.Mock).mockResolvedValue({
       id: 1,
-      roles: [{ name: "admin" }],
+      roles: [{ code: "admin", name: "超级管理员" }],
     });
     (prisma.role.findUnique as jest.Mock).mockResolvedValue({
       id: 10,
-      name: "admin",
+      code: "admin",
+      name: "超级管理员",
     });
 
     await expect(service.updateUser(1, { roles: [11] }, 1)).rejects.toThrow(
       "不能移除自己当前使用的 admin 管理员角色",
     );
     expect(prisma.user.update).not.toHaveBeenCalled();
+  });
+
+  it("uses code=user as the default role for web registration", async () => {
+    (prisma.user.findUnique as jest.Mock).mockResolvedValue(null);
+    (prisma.role.findUnique as jest.Mock).mockResolvedValue({
+      id: 20,
+      code: "user",
+      name: "普通员工",
+    });
+    (passwordService.hashPassword as jest.Mock).mockResolvedValue(
+      "hashed-password",
+    );
+    (prisma.user.create as jest.Mock).mockResolvedValue({ id: 3 });
+
+    await service.createUserByWeb({
+      email: "new-user@example.com",
+      password: "password123",
+      username: "new-user",
+      firstName: "New",
+      lastName: "User",
+      phoneNumber: "13800000000",
+      country: "CN",
+    });
+
+    expect(prisma.role.findUnique).toHaveBeenCalledWith({
+      where: { code: "user" },
+    });
+    expect(prisma.user.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          roles: {
+            connect: [{ id: 20 }],
+          },
+        }),
+      }),
+    );
   });
 
   it("does not clear roles when update payload omits roles", async () => {

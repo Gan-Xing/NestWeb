@@ -287,8 +287,8 @@ const legacyPermissionAliases = [
 ] as const;
 
 async function main() {
-  const adminRole = await upsertRole("admin");
-  const userRole = await upsertRole("User");
+  const adminRole = await upsertRole("admin", "系统管理员");
+  const userRole = await upsertRole("user", "普通用户");
 
   const permissionIds: number[] = [];
 
@@ -311,11 +311,11 @@ async function main() {
   await hideLegacyMenus();
 }
 
-async function upsertRole(name: string) {
+async function upsertRole(code: string, name: string) {
   return prisma.role.upsert({
-    where: { name },
-    create: { name },
-    update: {},
+    where: { code },
+    create: { code, name },
+    update: { name },
   });
 }
 

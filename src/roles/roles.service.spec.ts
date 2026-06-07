@@ -23,10 +23,11 @@ describe("RolesService", () => {
   it("rejects updating the system admin role", async () => {
     (prisma.role.findUnique as jest.Mock).mockResolvedValue({
       id: 1,
-      name: "admin",
+      code: "admin",
+      name: "超级管理员",
     });
 
-    await expect(service.update(1, { name: "administrator" })).rejects.toThrow(
+    await expect(service.update(1, { name: "系统管理员" })).rejects.toThrow(
       "系统管理员角色 admin 由系统维护，不能在后台编辑或删除",
     );
     expect(prisma.role.update).not.toHaveBeenCalled();
@@ -36,7 +37,8 @@ describe("RolesService", () => {
     (prisma.role.findMany as jest.Mock).mockResolvedValue([
       {
         id: 1,
-        name: "admin",
+        code: "admin",
+        name: "超级管理员",
       },
     ]);
 
