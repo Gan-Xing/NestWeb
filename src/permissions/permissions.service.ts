@@ -4,6 +4,7 @@ import { CreatePermissionDto } from "./dto/create-permission.dto";
 import { UpdatePermissionDto } from "./dto/update-permission.dto";
 import { Permission } from "@prisma/client";
 import type { PermissionRequirement } from "src/common";
+import { PermissionTreeNodeEntity } from "./entities";
 
 @Injectable()
 export class PermissionsService {
@@ -83,6 +84,57 @@ export class PermissionsService {
     });
   }
 
+  async findTree(): Promise<PermissionTreeNodeEntity[]> {
+    const groups = await this.prisma.permissionGroup.findMany({
+      where: {
+        parentId: null,
+        visible: true,
+      },
+      orderBy: {
+        sort: "asc",
+      },
+      include: {
+        permissions: {
+          orderBy: {
+            id: "asc",
+          },
+        },
+        children: {
+          where: {
+            visible: true,
+          },
+          orderBy: {
+            sort: "asc",
+          },
+          include: {
+            permissions: {
+              orderBy: {
+                id: "asc",
+              },
+            },
+            children: {
+              where: {
+                visible: true,
+              },
+              orderBy: {
+                sort: "asc",
+              },
+              include: {
+                permissions: {
+                  orderBy: {
+                    id: "asc",
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    return groups.map((group) => toPermissionTreeNode(group));
+  }
+
   async findOne(id: number): Promise<Permission | null> {
     return this.prisma.permission.findUnique({
       where: { id },
@@ -123,4 +175,41 @@ function buildPermissionCode(action: string, path: string) {
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, ".")
     .replace(/(^\.+|\.+$)/g, "");
+}
+
+type PermissionGroupWithTreeRelations = {
+  id: number;
+  name: string;
+  permissions?: Array<{
+    id: number;
+    code: string;
+    name: string;
+    action: string;
+    path: string;
+  }>;
+  children?: PermissionGroupWithTreeRelations[];
+};
+
+function toPermissionTreeNode(
+  group: PermissionGroupWithTreeRelations,
+): PermissionTreeNodeEntity {
+  const groupChildren = group.children?.map((child) =>
+    toPermissionTreeNode(child),
+  ) ?? [];
+  const permissionChildren =
+    group.permissions?.map((permission) => ({
+      key: `permission:${permission.id}`,
+      title: permission.name,
+      permissionId: permission.id,
+      selectable: true,
+      checkable: true,
+    })) ?? [];
+
+  return {
+    key: `group:${group.id}`,
+    title: group.name,
+    selectable: false,
+    checkable: false,
+    children: [...groupChildren, ...permissionChildren],
+  };
 }

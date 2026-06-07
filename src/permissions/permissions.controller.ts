@@ -17,7 +17,7 @@ import {
   ApiOkResponse,
   ApiCreatedResponse,
 } from "@nestjs/swagger";
-import { PermissionEntity } from "./entities";
+import { PermissionEntity, PermissionTreeNodeEntity } from "./entities";
 import { BatchIdsDto, Permissions } from "src/common";
 
 @Controller("api/permissions")
@@ -48,6 +48,17 @@ export class PermissionsController {
   async findAll() {
     const permissions = await this.permissionsService.findAll();
     return permissions.map((permission) => new PermissionEntity(permission));
+  }
+
+  @Get("tree")
+  @ApiBearerAuth()
+  @ApiOkResponse({
+    description: "Get permissions grouped by menu for role assignment.",
+    type: [PermissionTreeNodeEntity],
+  })
+  @Permissions(new PermissionEntity({ action: "GET", path: "/permissions" }))
+  async findTree() {
+    return this.permissionsService.findTree();
   }
 
   @Get(":id")
