@@ -20,6 +20,7 @@ model Permission {
   id        Int      @id @default(autoincrement())
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  code      String   @unique @default(uuid())
   name      String
   action    String
   path      String
@@ -32,11 +33,15 @@ model Permission {
 
 model PermissionGroup {
   id          Int               @id @default(autoincrement())
+  code        String            @unique @default(uuid())
   name        String
   parentId    Int?
   createdAt   DateTime          @default(now())
   updatedAt   DateTime          @updatedAt
   path        String            @default("default_path")
+  icon        String?
+  sort        Int               @default(0)
+  visible     Boolean           @default(true)
   permissions Permission[]
   parent      PermissionGroup?  @relation("PermissionGroupsToPermissionGroup", fields: [parentId], references: [id])
   children    PermissionGroup[] @relation("PermissionGroupsToPermissionGroup")

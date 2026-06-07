@@ -1,6 +1,6 @@
-import { PermissionGroup } from '@prisma/client';
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { PermissionEntity } from 'src/permissions/entities/permission.entity';
+import { PermissionGroup } from "@prisma/client";
+import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
+import { PermissionEntity } from "src/permissions/entities/permission.entity";
 export class PermissionGroupEntity implements PermissionGroup {
   constructor(partial: Partial<PermissionGroupEntity>) {
     Object.assign(this, partial);
@@ -10,10 +10,22 @@ export class PermissionGroupEntity implements PermissionGroup {
   id: number;
 
   @ApiProperty()
+  code: string;
+
+  @ApiProperty()
   name: string;
 
   @ApiProperty()
   path: string;
+
+  @ApiPropertyOptional()
+  icon: string | null;
+
+  @ApiProperty()
+  sort: number;
+
+  @ApiProperty()
+  visible: boolean;
 
   @ApiPropertyOptional()
   parentId: number | null;
@@ -24,12 +36,12 @@ export class PermissionGroupEntity implements PermissionGroup {
   @ApiProperty()
   updatedAt: Date;
 
-  @ApiPropertyOptional({ isArray: true, description: '权限对象数组' })
+  @ApiPropertyOptional({ isArray: true, description: "权限对象数组" })
   permissions?: PermissionEntity[];
 
-  @ApiPropertyOptional({ description: '父权限组' })
+  @ApiPropertyOptional({ description: "父权限组" })
   parent?: PermissionGroupEntity;
 
-  @ApiPropertyOptional({ isArray: true, description: '子权限组数组' })
+  @ApiPropertyOptional({ isArray: true, description: "子权限组数组" })
   children?: PermissionGroupEntity[];
 }

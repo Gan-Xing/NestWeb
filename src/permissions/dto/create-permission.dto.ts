@@ -1,7 +1,12 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsNotEmpty, IsInt } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
+import { IsString, IsNotEmpty, IsInt, IsOptional } from "class-validator";
 
 export class CreatePermissionDto {
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  code?: string;
+
   @ApiProperty()
   @IsString()
   @IsNotEmpty()

@@ -1,9 +1,14 @@
-import { PartialType } from '@nestjs/mapped-types';
-import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsString, IsOptional, IsInt } from 'class-validator';
-import { CreatePermissionDto } from './create-permission.dto';
+import { PartialType } from "@nestjs/mapped-types";
+import { ApiPropertyOptional } from "@nestjs/swagger";
+import { IsString, IsOptional, IsInt } from "class-validator";
+import { CreatePermissionDto } from "./create-permission.dto";
 
 export class UpdatePermissionDto extends PartialType(CreatePermissionDto) {
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  code?: string;
+
   @ApiPropertyOptional()
   @IsOptional()
   @IsString()

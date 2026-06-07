@@ -3,7 +3,7 @@ import { PrismaService } from "src/prisma/prisma.service";
 import { CreatePermissionDto } from "./dto/create-permission.dto";
 import { UpdatePermissionDto } from "./dto/update-permission.dto";
 import { Permission } from "@prisma/client";
-import { PermissionEntity } from "./entities/permission.entity";
+import type { PermissionRequirement } from "src/common";
 
 @Injectable()
 export class PermissionsService {
@@ -24,7 +24,7 @@ export class PermissionsService {
 
   async checkUserPermissions(
     userId: number,
-    requiredPermissions: PermissionEntity[]
+    requiredPermissions: PermissionRequirement[],
   ): Promise<boolean> {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
@@ -37,19 +37,36 @@ export class PermissionsService {
 
     const userPermissions = user.roles.flatMap((role) => role.permissions);
 
-    return requiredPermissions.every((permission) =>
-      userPermissions.some(
-        (userPermission) =>
+    return requiredPermissions.every((permission) => {
+      const code =
+        typeof permission === "string" ? permission : permission.code;
+
+      return userPermissions.some((userPermission) => {
+        if (code) {
+          return userPermission.code === code;
+        }
+
+        if (typeof permission === "string") {
+          return false;
+        }
+
+        return (
           userPermission.action === permission.action &&
           userPermission.path === permission.path
-      )
-    );
+        );
+      });
+    });
   }
 
   async create(createPermissionDto: CreatePermissionDto): Promise<Permission> {
+    const code =
+      createPermissionDto.code ??
+      buildPermissionCode(createPermissionDto.action, createPermissionDto.path);
+
     return this.prisma.permission.create({
       data: {
         ...createPermissionDto,
+        code,
       },
     });
   }
@@ -74,7 +91,7 @@ export class PermissionsService {
 
   async update(
     id: number,
-    updatePermissionDto: UpdatePermissionDto
+    updatePermissionDto: UpdatePermissionDto,
   ): Promise<Permission> {
     return this.prisma.permission.update({
       where: { id },
@@ -99,4 +116,11 @@ export class PermissionsService {
       where: { id },
     });
   }
+}
+
+function buildPermissionCode(action: string, path: string) {
+  return `${action}.${path}`
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, ".")
+    .replace(/(^\.+|\.+$)/g, "");
 }

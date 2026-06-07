@@ -1,6 +1,6 @@
-import { RoleEntity } from 'src/roles/entities/role.entity';
-import { Permission } from '@prisma/client';
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { RoleEntity } from "src/roles/entities/role.entity";
+import { Permission } from "@prisma/client";
+import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 
 export class PermissionEntity implements Permission {
   constructor(partial: Partial<PermissionEntity>) {
@@ -9,6 +9,9 @@ export class PermissionEntity implements Permission {
 
   @ApiProperty()
   id: number;
+
+  @ApiProperty()
+  code: string;
 
   @ApiProperty()
   name: string;
@@ -28,6 +31,6 @@ export class PermissionEntity implements Permission {
   @ApiProperty()
   permissionGroupId: number;
 
-  @ApiPropertyOptional({ isArray: true, description: '角色对象数组' })
+  @ApiPropertyOptional({ isArray: true, description: "角色对象数组" })
   roles?: RoleEntity[];
 }

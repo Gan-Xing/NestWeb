@@ -19,7 +19,7 @@ import { PermissionEntity } from 'src/permissions/entities';
 import { CurrentUser } from 'src/common';
 
 @Controller('api/menus')
-@ApiTags('菜单管理')
+@ApiTags('menus')
 export class MenusController {
   constructor(private readonly menusService: MenusService) {}
 

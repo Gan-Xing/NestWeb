@@ -1,10 +1,36 @@
-import { Injectable } from '@nestjs/common';
-import { PrismaService } from 'src/prisma/prisma.service';
-import { UsersService } from 'src/users/users.service';
-import { CreateMenuDto, UpdateMenuDto } from './dto';
+import { Injectable } from "@nestjs/common";
+import { PrismaService } from "src/prisma/prisma.service";
+import { UsersService } from "src/users/users.service";
+import { CreateMenuDto, UpdateMenuDto } from "./dto";
 
 @Injectable()
 export class MenusService {
+  private readonly menuInclude = {
+    permissions: true,
+    children: {
+      where: {
+        visible: true,
+      },
+      orderBy: {
+        sort: "asc" as const,
+      },
+      include: {
+        permissions: true,
+        children: {
+          where: {
+            visible: true,
+          },
+          orderBy: {
+            sort: "asc" as const,
+          },
+          include: {
+            permissions: true,
+          },
+        },
+      },
+    },
+  };
+
   constructor(
     private prisma: PrismaService,
     private usersService: UsersService,
@@ -24,6 +50,7 @@ export class MenusService {
 
     const data = {
       ...rest,
+      code: rest.code ?? buildMenuCode(rest.path),
       parentId,
     };
 
@@ -34,15 +61,12 @@ export class MenusService {
     return await this.prisma.permissionGroup.findMany({
       where: {
         parentId: null,
+        visible: true,
       },
-      include: {
-        permissions: true,
-        children: {
-          include: {
-            children: true, // to some depth as needed
-          },
-        },
+      orderBy: {
+        sort: "asc",
       },
+      include: this.menuInclude,
     });
   }
 
@@ -157,6 +181,7 @@ export class MenusService {
 
     const data = {
       ...rest,
+      ...(rest.path && !rest.code ? { code: buildMenuCode(rest.path) } : {}),
       parentId,
     };
 
@@ -209,5 +234,11 @@ export class MenusService {
 
     return ids;
   }
+}
 
+function buildMenuCode(path: string) {
+  return path
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, ".")
+    .replace(/(^\.+|\.+$)/g, "");
 }

@@ -1,7 +1,7 @@
-import { Injectable } from '@nestjs/common';
-import { PrismaService } from 'src/prisma/prisma.service';
-import { CreatePermissionGroupDto } from './dto/create-permissiongroup.dto';
-import { UpdatePermissionGroupDto } from './dto/update-permissiongroup.dto';
+import { Injectable } from "@nestjs/common";
+import { PrismaService } from "src/prisma/prisma.service";
+import { CreatePermissionGroupDto } from "./dto/create-permissiongroup.dto";
+import { UpdatePermissionGroupDto } from "./dto/update-permissiongroup.dto";
 
 @Injectable()
 export class PermissiongroupsService {
@@ -24,6 +24,7 @@ export class PermissiongroupsService {
 
     const data = {
       ...rest,
+      code: rest.code ?? buildPermissionGroupCode(rest.path),
       parentId,
       permissions: {
         connect: permissions?.map((permissionId) => ({ id: permissionId })),
@@ -80,6 +81,9 @@ export class PermissiongroupsService {
 
     const data = {
       ...rest,
+      ...(rest.path && !rest.code
+        ? { code: buildPermissionGroupCode(rest.path) }
+        : {}),
       parentId,
       permissions: permissions
         ? { connect: permissions.map((permissionId) => ({ id: permissionId })) }
@@ -113,4 +117,11 @@ export class PermissiongroupsService {
       where: { id },
     });
   }
+}
+
+function buildPermissionGroupCode(path: string) {
+  return path
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, ".")
+    .replace(/(^\.+|\.+$)/g, "");
 }

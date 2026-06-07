@@ -33,7 +33,7 @@ const ALLOWED_IMAGE_TYPES = [
   'image/heif'
 ];
 
-@ApiTags('图片管理')
+@ApiTags('images')
 @Controller('api/images')
 @UseGuards(JwtAuthGuard)
 @ApiBearerAuth()

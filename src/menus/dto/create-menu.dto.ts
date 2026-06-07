@@ -1,7 +1,18 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsString, IsNotEmpty, IsInt, IsOptional } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
+import {
+  IsString,
+  IsNotEmpty,
+  IsInt,
+  IsOptional,
+  IsBoolean,
+} from "class-validator";
 
 export class CreateMenuDto {
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  code?: string;
+
   @ApiProperty()
   @IsString()
   @IsNotEmpty()
@@ -16,4 +27,19 @@ export class CreateMenuDto {
   @IsString()
   @IsNotEmpty()
   path: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  icon?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsInt()
+  sort?: number;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsBoolean()
+  visible?: boolean;
 }
