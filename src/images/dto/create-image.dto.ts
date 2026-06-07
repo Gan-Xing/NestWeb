@@ -1,6 +1,5 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsString, IsArray, IsNotEmpty, IsOptional, IsNumber, IsObject, IsEnum } from 'class-validator';
-import { ImageThumbnail } from '../interfaces/image.interface';
 
 export class LocationDto {
   @ApiProperty({ description: '纬度' })
@@ -29,38 +28,37 @@ export class CreateImageDto {
   @IsNotEmpty()
   area: string;
 
-  @ApiProperty({ description: '图片URL数组' })
+  @ApiProperty({ description: '图片URL数组', type: [String] })
   @IsArray()
   @IsString({ each: true })
   @IsNotEmpty({ each: true })
   photos: string[];
 
-  @ApiProperty({ description: '缩略图信息', required: false })
-  @IsOptional()
-  @IsArray()
-  thumbnails?: ImageThumbnail[];
-
-  @ApiProperty({ description: 'GPS位置信息', required: false })
+  @ApiPropertyOptional({ description: 'GPS位置信息', type: () => LocationDto })
   @IsOptional()
   @IsObject()
   location?: LocationDto;
 
-  @ApiProperty({ description: '桩号', required: false })
+  @ApiPropertyOptional({ description: '桩号' })
   @IsOptional()
   @IsString()
   stakeNumber?: string;
 
-  @ApiProperty({ description: '偏距', required: false })
+  @ApiPropertyOptional({ description: '偏距' })
   @IsOptional()
   @IsNumber()
   offset?: number;
 
-  @ApiProperty({ description: '分类', enum: ImageCategory, default: ImageCategory.PROGRESS })
-  @IsEnum(ImageCategory)
+  @ApiPropertyOptional({
+    description: '分类',
+    enum: ImageCategory,
+    default: ImageCategory.PROGRESS,
+  })
   @IsOptional()
+  @IsEnum(ImageCategory)
   category?: ImageCategory;
 
-  @ApiProperty({ description: '标签数组', type: [String], required: false })
+  @ApiPropertyOptional({ description: '标签数组', type: [String] })
   @IsOptional()
   @IsArray()
   @IsString({ each: true })

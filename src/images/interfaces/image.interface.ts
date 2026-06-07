@@ -1,7 +1,7 @@
 export interface ImageThumbnail {
   size: string;
   path: string;
-  url: string;
+  url?: string;
 }
 
 export interface ImageLocation {

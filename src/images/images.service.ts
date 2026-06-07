@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException, ForbiddenException, Inject } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { CreateImageDto, UpdateImageDto } from './dto';
+import { CreateImageDto, ImageCategory, UpdateImageDto } from './dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { IStorageService } from 'src/storage/storage.interface';
 import * as path from 'path';
@@ -24,7 +24,7 @@ export class ImagesService {
       location: location ? JSON.stringify(location) : undefined,
       stakeNumber,
       offset,
-      category: category || '进度',
+      category: category || ImageCategory.PROGRESS,
       tags: tags || [],
       createdById: userId,
       thumbnails: createImageDto.photos.map(photo => {
@@ -155,12 +155,11 @@ export class ImagesService {
       throw new ForbiddenException('无权更新此图片');
     }
 
-    const { location, thumbnails, ...restDto } = updateImageDto;
+    const { location, ...restDto } = updateImageDto;
     
     const data = {
       ...restDto,
       location: location ? JSON.stringify(location) : undefined,
-      thumbnails: thumbnails ? thumbnails.map(t => ({ ...t })) : undefined,
     };
 
     return this.prisma.image.update({
