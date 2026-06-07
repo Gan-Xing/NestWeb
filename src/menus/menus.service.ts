@@ -3,23 +3,27 @@ import { PrismaService } from "src/prisma/prisma.service";
 import { UsersService } from "src/users/users.service";
 import { CreateMenuDto, UpdateMenuDto } from "./dto";
 
+const hiddenNavigationMenuCodes = ["auth.permissions"];
+const visibleNavigationWhere = {
+  visible: true,
+  code: {
+    notIn: hiddenNavigationMenuCodes,
+  },
+};
+
 @Injectable()
 export class MenusService {
   private readonly menuInclude = {
     permissions: true,
     children: {
-      where: {
-        visible: true,
-      },
+      where: visibleNavigationWhere,
       orderBy: {
         sort: "asc" as const,
       },
       include: {
         permissions: true,
         children: {
-          where: {
-            visible: true,
-          },
+          where: visibleNavigationWhere,
           orderBy: {
             sort: "asc" as const,
           },
@@ -61,7 +65,7 @@ export class MenusService {
     return await this.prisma.permissionGroup.findMany({
       where: {
         parentId: null,
-        visible: true,
+        ...visibleNavigationWhere,
       },
       orderBy: {
         sort: "asc",
