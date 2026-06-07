@@ -111,6 +111,10 @@ development.
 Use `/api/health/live` for restart probes and `/api/health/ready` for traffic
 readiness or Docker health checks.
 
+RabbitMQ and MinIO are runtime integrations but are not yet part of the
+readiness gate. S1 keeps the probe low-cost and documents the gap; add explicit
+RabbitMQ and MinIO checks before queue/storage outages must block traffic.
+
 ## OpenAPI
 
 Swagger/OpenAPI is disabled by default in production. Enable it only for trusted

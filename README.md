@@ -8,6 +8,7 @@ It is paired with `Antdpro6` for the frontend.
 The current enterprise modernization plan is saved here:
 
 - [TS full-stack enterprise handoff](docs/handoff/ts-fullstack-enterprise-handoff.md)
+- [Single-enterprise handoff and prompts](docs/handoff/single-enterprise-handoff-and-prompts.md)
 
 Use this handoff document as the source of truth for future staged work. It
 records the agreed sequence for `Role.code`, frontend productization,
@@ -53,6 +54,10 @@ curl http://localhost:3030/api/health/ready
 Use `/api/health/live` for process liveness and `/api/health/ready` for
 readiness checks that verify database and Redis connectivity. The Docker
 Compose API healthcheck uses readiness.
+
+RabbitMQ and MinIO readiness checks are tracked as an S1 TODO. They should be
+added when queue/storage availability must block traffic, using cheap probes
+that do not create objects or messages.
 
 ## Notes For Future Work
 

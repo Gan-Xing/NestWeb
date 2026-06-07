@@ -1,8 +1,8 @@
-import { Injectable, ServiceUnavailableException } from '@nestjs/common';
-import { PrismaService } from 'src/prisma/prisma.service';
-import { RedisService } from 'src/redis/redis.service';
+import { Injectable, ServiceUnavailableException } from "@nestjs/common";
+import { PrismaService } from "src/prisma/prisma.service";
+import { RedisService } from "src/redis/redis.service";
 
-type HealthStatus = 'ok' | 'error';
+type HealthStatus = "ok" | "error";
 
 type DependencyHealth = {
   status: HealthStatus;
@@ -18,7 +18,7 @@ export class AppService {
   ) {}
 
   getHello(): string {
-    return 'Hello World!';
+    return "Hello World!";
   }
 
   getHealth() {
@@ -27,23 +27,27 @@ export class AppService {
 
   getLiveness() {
     return {
-      status: 'ok',
-      service: 'nestweb-api',
-      check: 'liveness',
+      status: "ok",
+      service: "nestweb-api",
+      check: "liveness",
       timestamp: new Date().toISOString(),
       uptimeSeconds: Math.round(process.uptime()),
     };
   }
 
   async getReadiness() {
+    // TODO(S1): add RabbitMQ and MinIO probes once their clients expose cheap
+    // ping/stat calls in application startup context. Current readiness keeps
+    // the deploy gate on mandatory database and Redis dependencies.
     const [database, redis] = await Promise.all([
       this.runDependencyCheck(() => this.checkDatabase()),
       this.runDependencyCheck(() => this.checkRedis()),
     ]);
     const payload = {
-      status: database.status === 'ok' && redis.status === 'ok' ? 'ok' : 'error',
-      service: 'nestweb-api',
-      check: 'readiness',
+      status:
+        database.status === "ok" && redis.status === "ok" ? "ok" : "error",
+      service: "nestweb-api",
+      check: "readiness",
       timestamp: new Date().toISOString(),
       dependencies: {
         database,
@@ -51,7 +55,7 @@ export class AppService {
       },
     };
 
-    if (payload.status !== 'ok') {
+    if (payload.status !== "ok") {
       throw new ServiceUnavailableException(payload);
     }
 
@@ -63,10 +67,10 @@ export class AppService {
   }
 
   private async checkRedis() {
-    const client = this.redisService.getClient('default');
+    const client = this.redisService.getClient("default");
 
     if (!client) {
-      throw new Error('Default Redis client is not configured');
+      throw new Error("Default Redis client is not configured");
     }
 
     await client.ping();
@@ -81,14 +85,14 @@ export class AppService {
       await check();
 
       return {
-        status: 'ok',
+        status: "ok",
         latencyMs: Math.round(performance.now() - startedAt),
       };
     } catch (error) {
       return {
-        status: 'error',
+        status: "error",
         latencyMs: Math.round(performance.now() - startedAt),
-        error: error instanceof Error ? error.message : 'Unknown error',
+        error: error instanceof Error ? error.message : "Unknown error",
       };
     }
   }

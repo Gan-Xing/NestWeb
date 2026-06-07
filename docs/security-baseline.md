@@ -70,6 +70,10 @@ Health endpoints:
 
 Use readiness for load balancer traffic decisions.
 
+RabbitMQ and MinIO are documented readiness TODOs. Keep them out of traffic
+gating until cheap, authenticated probes are wired in application startup
+context.
+
 Metrics:
 
 - Keep `METRICS_PUBLIC=false` unless the endpoint is behind a trusted network.
