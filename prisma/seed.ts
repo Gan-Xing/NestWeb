@@ -266,12 +266,6 @@ const menuTree: MenuSeed[] = [
             action: "DELETE",
             path: "/system-log/clear",
           },
-          {
-            code: "system.logs.audit",
-            name: "审计系统日志",
-            action: "GET",
-            path: "/system-log",
-          },
         ],
       },
     ],
@@ -280,6 +274,17 @@ const menuTree: MenuSeed[] = [
 
 const legacyMenuCodes = ["_logs_2"];
 const legacyMenuPaths = ["/logs"];
+const legacyPermissionAliases = [
+  ["patch_users_id_3", "auth.users.update"],
+  ["patch_roles_id_7", "auth.roles.update"],
+  ["patch_permissions_id_11", "auth.permissions.update"],
+  ["patch_menus_id_15", "auth.menus.update"],
+  ["get_system_log_export_23", "system.logs.export"],
+  ["delete_system_log_clear_24", "system.logs.delete"],
+  ["get_system_log_25", "system.logs.view"],
+  ["get_system_log_id_26", "system.logs.detail"],
+  ["system.logs.audit", "system.logs.view"],
+] as const;
 
 async function main() {
   const adminRole = await upsertRole("admin");
@@ -302,6 +307,7 @@ async function main() {
 
   await connectRolePermissions(userRole.id, ["dashboard.view"]);
   await upsertAdminUser(adminRole.id);
+  await migrateLegacyPermissionAliases();
   await hideLegacyMenus();
 }
 
@@ -462,6 +468,33 @@ async function hideLegacyMenus() {
       visible: false,
     },
   });
+}
+
+async function migrateLegacyPermissionAliases() {
+  for (const [legacyCode, targetCode] of legacyPermissionAliases) {
+    const legacyPermission = await prisma.permission.findUnique({
+      where: { code: legacyCode },
+    });
+    const targetPermission = await prisma.permission.findUnique({
+      where: { code: targetCode },
+    });
+
+    if (!legacyPermission || !targetPermission) {
+      continue;
+    }
+
+    await prisma.$executeRaw`
+      INSERT INTO "_PermissionToRole" ("A", "B")
+      SELECT ${targetPermission.id}, "B"
+      FROM "_PermissionToRole"
+      WHERE "A" = ${legacyPermission.id}
+      ON CONFLICT DO NOTHING
+    `;
+
+    await prisma.permission.delete({
+      where: { id: legacyPermission.id },
+    });
+  }
 }
 
 main()
