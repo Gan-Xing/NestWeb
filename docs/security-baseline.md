@@ -86,6 +86,10 @@ This avoids multiple replicas applying migrations concurrently.
 
 The seed account is for bootstrap only. Before public exposure:
 
-- change the password
+- configure `ADMIN_EMAIL`, `ADMIN_USERNAME`, and a strong `ADMIN_PASSWORD`
 - consider disabling password login if SSO is added later
 - keep admin role protection based on `Role.code = "admin"`
+
+Production seed refuses missing admin credentials and rejects default or weak
+admin passwords. Running seed updates the bootstrap administrator password to
+the configured `ADMIN_PASSWORD`.

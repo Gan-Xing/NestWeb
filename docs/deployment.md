@@ -31,6 +31,9 @@ Required production-like values:
 - `JWT_REFRESH_SECRET`
 - `MINIO_SECRET_KEY`
 - `CORS_ORIGINS`
+- `ADMIN_EMAIL`
+- `ADMIN_USERNAME`
+- `ADMIN_PASSWORD`
 
 3. Build and start the stack:
 
@@ -94,7 +97,10 @@ The seed creates or updates:
 - System-managed menus and permission codes
 - The initial administrator account
 
-Change the seeded administrator password before exposing the system.
+Production seed requires `ADMIN_EMAIL`, `ADMIN_USERNAME`, and a strong
+`ADMIN_PASSWORD`. Running seed updates the bootstrap administrator password to
+`ADMIN_PASSWORD`; do not use `admin123` or any placeholder value outside local
+development.
 
 ## Health Endpoints
 

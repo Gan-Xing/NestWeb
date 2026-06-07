@@ -56,11 +56,13 @@ added outside the protected code list.
 - upserts `admin` and `user` roles by `code`
 - connects all system permissions to `admin`
 - connects `dashboard.view` to `user`
-- upserts the initial administrator account
+- upserts the initial administrator account from `ADMIN_EMAIL`,
+  `ADMIN_USERNAME`, and `ADMIN_PASSWORD`
 - normalizes legacy permission aliases
 
 Run seed deliberately. It is safe for system records, but it can overwrite
-seed-managed display names and system-managed tree metadata.
+seed-managed display names, system-managed tree metadata, and the bootstrap
+administrator password.
 
 ## Current Boundary
 

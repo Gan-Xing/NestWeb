@@ -1,5 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 import { hash } from "bcrypt";
+import { resolveAdminSeedConfig } from "../src/common/configs/admin-seed";
 
 const prisma = new PrismaClient();
 
@@ -423,14 +424,15 @@ async function connectRolePermissions(
 }
 
 async function upsertAdminUser(adminRoleId: number) {
-  const hashedAdminPassword = await hash("admin123", 10);
+  const admin = resolveAdminSeedConfig();
+  const hashedAdminPassword = await hash(admin.password, 10);
 
   await prisma.user.upsert({
-    where: { email: "admin@example.com" },
+    where: { email: admin.email },
     create: {
-      email: "admin@example.com",
+      email: admin.email,
       password: hashedAdminPassword,
-      username: "admin",
+      username: admin.username,
       gender: "Male",
       departmentId: 1,
       isAdmin: true,
@@ -440,6 +442,8 @@ async function upsertAdminUser(adminRoleId: number) {
       },
     },
     update: {
+      password: hashedAdminPassword,
+      username: admin.username,
       isAdmin: true,
       roles: {
         connect: [{ id: adminRoleId }],
@@ -497,11 +501,13 @@ async function migrateLegacyPermissionAliases() {
   }
 }
 
-main()
-  .catch((error) => {
-    console.error(error);
-    process.exit(1);
-  })
-  .finally(async () => {
-    await prisma.$disconnect();
-  });
+if (require.main === module) {
+  main()
+    .catch((error) => {
+      console.error(error);
+      process.exit(1);
+    })
+    .finally(async () => {
+      await prisma.$disconnect();
+    });
+}

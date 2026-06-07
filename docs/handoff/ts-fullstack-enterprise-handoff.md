@@ -17,6 +17,7 @@
 - P4 补充：应用启动不再自动执行 Prisma migration，migration 改为独立部署步骤或 Compose 一次性 `migrate` 服务。
 - P3/P4 补充：Antdpro6 E2E workflow 已接入 `main`/PR/手动触发，缺少环境变量时安全跳过。
 - P4 补充：企业交付文档已固化，包括部署、环境变量、权限模型、安全基线和回滚文档。
+- P4 补充：初始管理员 seed 已改为 `ADMIN_EMAIL`/`ADMIN_USERNAME`/`ADMIN_PASSWORD` 驱动，生产禁止默认弱口令。
 - P5：数据权限、租户、组织架构等更大企业能力尚未开始，当前仍按单租户最佳实践推进。
 
 ---

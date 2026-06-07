@@ -14,6 +14,9 @@ committed.
 | `JWT_ACCESS_SECRET` | Access token signing secret | Required, at least 32 chars, not a placeholder |
 | `JWT_REFRESH_SECRET` | Refresh token signing secret | Required, at least 32 chars, not a placeholder |
 | `CORS_ORIGINS` | Allowed frontend origins | Required in production unless `CORS_ENABLED=false` |
+| `ADMIN_EMAIL` | Bootstrap administrator email for seed | Required when running seed in production |
+| `ADMIN_USERNAME` | Bootstrap administrator username for seed | Required when running seed in production |
+| `ADMIN_PASSWORD` | Bootstrap administrator password for seed | Required, at least 10 chars, strong, and not a default value in production |
 
 ## Infrastructure
 
@@ -83,3 +86,20 @@ committed.
 
 This is intentional. Fix environment configuration instead of weakening the
 runtime checks.
+
+## Seed Administrator
+
+`prisma/seed.ts` reads:
+
+- `ADMIN_EMAIL`
+- `ADMIN_USERNAME`
+- `ADMIN_PASSWORD`
+
+Outside production, local defaults are still available for developer
+bootstrapping. In production, all three values are required and
+`ADMIN_PASSWORD` must not be a default or weak value.
+
+The seed treats the bootstrap administrator as seed-managed. Running
+`pnpm run db:seed` updates that user's password to `ADMIN_PASSWORD` and connects
+the `admin` role. Use seed deliberately and rotate the password through the same
+environment-controlled process.
