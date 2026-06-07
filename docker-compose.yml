@@ -18,6 +18,9 @@ services:
       RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-nestweb_password}
       JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:-change-me-access-secret}
       JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-change-me-refresh-secret}
+      SWAGGER_ENABLED: ${SWAGGER_ENABLED:-false}
+      METRICS_PUBLIC: ${METRICS_PUBLIC:-false}
+      METRICS_BEARER_TOKEN: ${METRICS_BEARER_TOKEN:-}
       MAIL_HOST: ${MAIL_HOST:-}
       MAIL_PORT: ${MAIL_PORT:-}
       MAIL_USER: ${MAIL_USER:-}

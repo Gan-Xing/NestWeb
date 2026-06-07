@@ -1,7 +1,8 @@
-import { ExecutionContext, Injectable, Logger } from '@nestjs/common';
+import { ExecutionContext, Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { AuthGuard } from '@nestjs/passport';
 import { IS_PUBLIC_KEY } from 'src/common';
+import { isMetricsRequestAllowed } from '../configs/runtime-config';
 
 @Injectable()
 export class JwtAuthGuard extends AuthGuard('jwt') {
@@ -28,7 +29,11 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
 
 		const request = context.switchToHttp().getRequest();
 		if (request?.path === '/metrics') {
-			return true;
+			if (isMetricsRequestAllowed(request)) {
+				return true;
+			}
+
+			throw new UnauthorizedException("Metrics endpoint is protected");
 		}
 
 		const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
