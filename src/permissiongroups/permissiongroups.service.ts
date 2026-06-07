@@ -1,4 +1,5 @@
 import { Injectable } from "@nestjs/common";
+import { assertNotSystemManagedMenu, systemManagedMenuCodes } from "src/common";
 import { PrismaService } from "src/prisma/prisma.service";
 import { CreatePermissionGroupDto } from "./dto/create-permissiongroup.dto";
 import { UpdatePermissionGroupDto } from "./dto/update-permissiongroup.dto";
@@ -64,6 +65,7 @@ export class PermissiongroupsService {
     if (!existingPermissionGroup) {
       throw new Error(`Permission group with id ${id} does not exist`);
     }
+    assertNotSystemManagedMenu(existingPermissionGroup, "编辑");
 
     const { parentId, permissions, ...rest } = updatePermissiongroupDto;
 
@@ -104,18 +106,54 @@ export class PermissiongroupsService {
     if (!existingPermissionGroup) {
       throw new Error(`Permission group with id ${id} does not exist`);
     }
+    assertNotSystemManagedMenu(existingPermissionGroup, "删除");
 
-    // Recursively remove all child permission groups
-    const childPermissionGroups = await this.prisma.permissionGroup.findMany({
-      where: { parentId: id },
-    });
-    for (const childPermissionGroup of childPermissionGroups) {
-      await this.remove(childPermissionGroup.id);
+    const childPermissionGroupIds = await this.getChildPermissionGroupIds(id);
+    if (childPermissionGroupIds.length > 0) {
+      await this.assertNoSystemManagedPermissionGroups(childPermissionGroupIds);
     }
+
+    await this.prisma.permissionGroup.deleteMany({
+      where: { id: { in: childPermissionGroupIds } },
+    });
 
     return await this.prisma.permissionGroup.delete({
       where: { id },
     });
+  }
+
+  private async assertNoSystemManagedPermissionGroups(ids: number[]) {
+    const permissionGroups = await this.prisma.permissionGroup.findMany({
+      where: { id: { in: ids } },
+      select: {
+        code: true,
+        name: true,
+      },
+    });
+
+    const systemManagedPermissionGroup = permissionGroups.find((group) =>
+      systemManagedMenuCodes.has(group.code),
+    );
+
+    if (systemManagedPermissionGroup) {
+      assertNotSystemManagedMenu(systemManagedPermissionGroup, "删除");
+    }
+  }
+
+  private async getChildPermissionGroupIds(
+    parentId: number,
+    ids: number[] = [],
+  ): Promise<number[]> {
+    const childPermissionGroups = await this.prisma.permissionGroup.findMany({
+      where: { parentId },
+    });
+
+    for (const childPermissionGroup of childPermissionGroups) {
+      ids.push(childPermissionGroup.id);
+      await this.getChildPermissionGroupIds(childPermissionGroup.id, ids);
+    }
+
+    return ids;
   }
 }
 

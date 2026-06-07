@@ -1,21 +1,13 @@
-import { BadRequestException, Injectable } from "@nestjs/common";
+import { Injectable } from "@nestjs/common";
+import {
+  assertNotSystemManagedMenu,
+  hiddenNavigationMenuCodes,
+  systemManagedMenuCodes,
+} from "src/common";
 import { PrismaService } from "src/prisma/prisma.service";
 import { UsersService } from "src/users/users.service";
 import { CreateMenuDto, UpdateMenuDto } from "./dto";
 
-const hiddenNavigationMenuCodes = ["auth.permissions", "auth.menus"];
-const systemManagedMenuCodes = new Set([
-  "dashboard",
-  "auth",
-  "auth.users",
-  "auth.roles",
-  "auth.permissions",
-  "auth.menus",
-  "resources",
-  "resources.images",
-  "system",
-  "system.logs",
-]);
 const visibleNavigationWhere = {
   visible: true,
   code: {
@@ -281,17 +273,4 @@ function buildMenuCode(path: string) {
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, ".")
     .replace(/(^\.+|\.+$)/g, "");
-}
-
-function assertNotSystemManagedMenu(
-  menu: { code: string; name: string },
-  operation: "编辑" | "删除",
-) {
-  if (!systemManagedMenuCodes.has(menu.code)) {
-    return;
-  }
-
-  throw new BadRequestException(
-    `系统内置菜单「${menu.name}」由代码种子维护，不能在后台${operation}`,
-  );
 }

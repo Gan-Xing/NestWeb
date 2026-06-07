@@ -1,4 +1,5 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
+import { assertNotSystemManagedPermission } from "src/common";
 import { PrismaService } from "src/prisma/prisma.service";
 import { CreatePermissionDto } from "./dto/create-permission.dto";
 import { UpdatePermissionDto } from "./dto/update-permission.dto";
@@ -145,6 +146,20 @@ export class PermissionsService {
     id: number,
     updatePermissionDto: UpdatePermissionDto,
   ): Promise<Permission> {
+    const existingPermission = await this.prisma.permission.findUnique({
+      where: { id },
+      select: {
+        code: true,
+        name: true,
+      },
+    });
+
+    if (!existingPermission) {
+      throw new NotFoundException("Permission not found");
+    }
+
+    assertNotSystemManagedPermission(existingPermission, "编辑");
+
     return this.prisma.permission.update({
       where: { id },
       data: {
@@ -154,6 +169,8 @@ export class PermissionsService {
   }
 
   async removeMany(ids: number[]) {
+    await this.assertPermissionsAreMutable(ids, "删除");
+
     return this.prisma.permission.deleteMany({
       where: {
         id: {
@@ -164,9 +181,32 @@ export class PermissionsService {
   }
 
   async remove(id: number): Promise<Permission> {
+    await this.assertPermissionsAreMutable([id], "删除");
+
     return this.prisma.permission.delete({
       where: { id },
     });
+  }
+
+  private async assertPermissionsAreMutable(
+    ids: number[],
+    operation: "编辑" | "删除",
+  ) {
+    const permissions = await this.prisma.permission.findMany({
+      where: {
+        id: {
+          in: ids,
+        },
+      },
+      select: {
+        code: true,
+        name: true,
+      },
+    });
+
+    for (const permission of permissions) {
+      assertNotSystemManagedPermission(permission, operation);
+    }
   }
 }
 

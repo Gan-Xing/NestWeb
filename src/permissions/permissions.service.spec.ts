@@ -138,4 +138,44 @@ describe('PermissionsService', () => {
       '删除用户',
     ]);
   });
+
+  it('rejects updating system-managed permissions', async () => {
+    (prisma.permission.findUnique as jest.Mock).mockResolvedValue({
+      code: 'auth.roles.update',
+      name: '编辑角色',
+    });
+
+    await expect(service.update(7, { name: '修改角色' })).rejects.toThrow(
+      '系统内置权限「编辑角色」由代码种子维护，不能在后台编辑',
+    );
+    expect(prisma.permission.update).not.toHaveBeenCalled();
+  });
+
+  it('rejects deleting system-managed permissions', async () => {
+    (prisma.permission.findMany as jest.Mock).mockResolvedValue([
+      {
+        code: 'auth.roles.delete',
+        name: '删除角色',
+      },
+    ]);
+
+    await expect(service.remove(8)).rejects.toThrow(
+      '系统内置权限「删除角色」由代码种子维护，不能在后台删除',
+    );
+    expect(prisma.permission.delete).not.toHaveBeenCalled();
+  });
+
+  it('rejects batch deleting system-managed permissions', async () => {
+    (prisma.permission.findMany as jest.Mock).mockResolvedValue([
+      {
+        code: 'auth.users.view',
+        name: '查看用户',
+      },
+    ]);
+
+    await expect(service.removeMany([1, 2])).rejects.toThrow(
+      '系统内置权限「查看用户」由代码种子维护，不能在后台删除',
+    );
+    expect(prisma.permission.deleteMany).not.toHaveBeenCalled();
+  });
 });
