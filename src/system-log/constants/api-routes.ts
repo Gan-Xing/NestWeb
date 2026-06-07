@@ -87,6 +87,8 @@ export const API_ROUTES_MAP = {
   // 基础路由
   'GET /': '根路径',
   'GET /api/health': '健康检查',
+  'GET /api/health/live': '存活检查',
+  'GET /api/health/ready': '就绪检查',
   'GET /metrics': '监控指标',
   'GET /api': 'API根路径',
   'GET /api/': 'API根路径',

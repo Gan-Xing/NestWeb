@@ -20,6 +20,7 @@ pnpm install
 pnpm run lint:check
 pnpm test
 pnpm run build
+pnpm run db:migrate:deploy
 ```
 
 ## Local Docker
@@ -29,12 +30,21 @@ docker compose up -d --build
 ```
 
 The API listens on `http://localhost:3030`.
+Docker Compose runs the one-shot `migrate` service before starting the API.
+Outside Compose, run `pnpm run db:migrate:deploy` once during deployment before
+starting `pnpm run start:prod`.
 
-Health check:
+Health checks:
 
 ```bash
 curl http://localhost:3030/api/health
+curl http://localhost:3030/api/health/live
+curl http://localhost:3030/api/health/ready
 ```
+
+Use `/api/health/live` for process liveness and `/api/health/ready` for
+readiness checks that verify database and Redis connectivity. The Docker
+Compose API healthcheck uses readiness.
 
 ## Notes For Future Work
 

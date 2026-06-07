@@ -38,4 +38,4 @@ COPY --from=builder /app/dist ./dist
 
 EXPOSE 3030
 
-CMD ["sh", "-c", "pnpm exec prisma migrate deploy && node dist/src/main.js"]
+CMD ["node", "dist/src/main.js"]
