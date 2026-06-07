@@ -10,6 +10,15 @@ export class PermissionTreeNodeEntity {
   @ApiPropertyOptional()
   permissionId?: number;
 
+  @ApiPropertyOptional()
+  code?: string;
+
+  @ApiPropertyOptional()
+  action?: string;
+
+  @ApiPropertyOptional()
+  path?: string;
+
   @ApiProperty()
   selectable: boolean;
 

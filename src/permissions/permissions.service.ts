@@ -190,6 +190,28 @@ type PermissionGroupWithTreeRelations = {
   children?: PermissionGroupWithTreeRelations[];
 };
 
+const actionSortOrder: Record<string, number> = {
+  GET: 10,
+  POST: 20,
+  PUT: 30,
+  PATCH: 30,
+  DELETE: 40,
+};
+
+function comparePermissionsForTree(
+  left: NonNullable<PermissionGroupWithTreeRelations["permissions"]>[number],
+  right: NonNullable<PermissionGroupWithTreeRelations["permissions"]>[number],
+) {
+  const leftOrder = actionSortOrder[left.action.toUpperCase()] ?? 99;
+  const rightOrder = actionSortOrder[right.action.toUpperCase()] ?? 99;
+
+  if (leftOrder !== rightOrder) {
+    return leftOrder - rightOrder;
+  }
+
+  return left.id - right.id;
+}
+
 function toPermissionTreeNode(
   group: PermissionGroupWithTreeRelations,
 ): PermissionTreeNodeEntity {
@@ -197,13 +219,19 @@ function toPermissionTreeNode(
     toPermissionTreeNode(child),
   ) ?? [];
   const permissionChildren =
-    group.permissions?.map((permission) => ({
-      key: `permission:${permission.id}`,
-      title: permission.name,
-      permissionId: permission.id,
-      selectable: true,
-      checkable: true,
-    })) ?? [];
+    group.permissions
+      ?.slice()
+      .sort(comparePermissionsForTree)
+      .map((permission) => ({
+        key: `permission:${permission.id}`,
+        title: permission.name,
+        permissionId: permission.id,
+        code: permission.code,
+        action: permission.action,
+        path: permission.path,
+        selectable: true,
+        checkable: true,
+      })) ?? [];
 
   return {
     key: `group:${group.id}`,
