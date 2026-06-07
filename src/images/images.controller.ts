@@ -16,7 +16,7 @@ import {
   Inject
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { ApiTags, ApiOperation, ApiConsumes, ApiBody, ApiBearerAuth, ApiOkResponse } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiConsumes, ApiBody, ApiBearerAuth, ApiOkResponse, ApiQuery } from '@nestjs/swagger';
 import { ImagesService } from 'src/images/images.service';
 import { CreateImageDto, ImageCategory, UpdateImageDto } from './dto';
 import { CurrentUser, Permissions, JwtAuthGuard } from 'src/common';
@@ -98,6 +98,16 @@ export class ImagesController {
   @Get()
   @ApiBearerAuth()
   @ApiOkResponse({ description: '获取图片列表' })
+  @ApiQuery({ name: 'current', required: false, type: Number })
+  @ApiQuery({ name: 'pageSize', required: false, type: Number })
+  @ApiQuery({ name: 'description', required: false, type: String })
+  @ApiQuery({ name: 'area', required: false, type: String })
+  @ApiQuery({ name: 'category', required: false, enum: ImageCategory })
+  @ApiQuery({ name: 'stakeNumber', required: false, type: String })
+  @ApiQuery({ name: 'tags', required: false, type: [String] })
+  @ApiQuery({ name: 'createdBy', required: false, type: String })
+  @ApiQuery({ name: 'startDate', required: false, type: String })
+  @ApiQuery({ name: 'endDate', required: false, type: String })
   @Permissions(new PermissionEntity({ action: 'GET', path: '/images' }))
   async findAll(
     @CurrentUser('isAdmin') isAdmin: boolean,
