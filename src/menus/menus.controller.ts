@@ -7,14 +7,13 @@ import {
   Param,
   Delete,
   ParseIntPipe,
-  ParseArrayPipe,
   Query,
   UseGuards,
 } from '@nestjs/common';
 import { MenusService } from './menus.service';
 import { CreateMenuDto, UpdateMenuDto } from './dto';
-import { ApiBearerAuth, ApiOkResponse, ApiTags } from '@nestjs/swagger';
-import { JwtAuthGuard, Permissions } from 'src/common';
+import { ApiBearerAuth, ApiOkResponse, ApiQuery, ApiTags } from '@nestjs/swagger';
+import { BatchIdsDto, JwtAuthGuard, Permissions } from 'src/common';
 import { PermissionEntity } from 'src/permissions/entities';
 import { CurrentUser } from 'src/common';
 
@@ -32,6 +31,9 @@ export class MenusController {
 
   @Get()
   @ApiBearerAuth()
+  @ApiQuery({ name: 'pageSize', required: false, type: Number })
+  @ApiQuery({ name: 'current', required: false, type: Number })
+  @ApiQuery({ name: 'name', required: false, type: String })
   @Permissions(new PermissionEntity({ action: 'GET', path: '/menus' }))
   async findAllPaged(
     @Query('pageSize') pageSize?: string,  // 移除 ParseIntPipe
@@ -74,8 +76,8 @@ export class MenusController {
   @ApiBearerAuth()
   @ApiOkResponse({ description: 'Delete menus by their IDs.' })
   @Permissions(new PermissionEntity({ action: 'DELETE', path: '/menus' }))
-  async removeByIds(@Body('ids', ParseArrayPipe) ids: number[]) {
-    return this.menusService.removeMenusByIds(ids);
+  async removeByIds(@Body() body: BatchIdsDto) {
+    return this.menusService.removeMenusByIds(body.ids);
   }
 
   @Delete(':id')

@@ -8,7 +8,6 @@ import {
 	Delete,
 	ParseIntPipe,
 	Req,
-	ParseArrayPipe,
 	Query
 } from '@nestjs/common';
 import {
@@ -21,7 +20,7 @@ import {
 import { UsersService } from './users.service';
 import { CreateUserDto, UpdateUserDto } from './dto';
 import { UserEntity } from './entities';
-import { Permissions } from 'src/common';
+import { BatchIdsDto, Permissions } from 'src/common';
 import { PermissionEntity } from 'src/permissions/entities';
 
 @Controller('api/users')
@@ -105,8 +104,8 @@ export class UsersController {
 	@ApiBearerAuth()
 	@ApiOkResponse({ description: 'Delete users by their IDs.' })
 	@Permissions(new PermissionEntity({ action: 'DELETE', path: '/users' }))
-	async removeByIds(@Body('ids', ParseArrayPipe) ids: number[]) {
-		return this.usersService.removeByIds(ids);
+	async removeByIds(@Body() body: BatchIdsDto) {
+		return this.usersService.removeByIds(body.ids);
 	}
 
 	@Delete(':id')

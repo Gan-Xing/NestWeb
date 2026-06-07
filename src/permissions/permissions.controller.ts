@@ -18,7 +18,7 @@ import {
   ApiCreatedResponse,
 } from "@nestjs/swagger";
 import { PermissionEntity } from "./entities";
-import { Permissions } from "src/common";
+import { BatchIdsDto, Permissions } from "src/common";
 
 @Controller("api/permissions")
 @ApiTags("permissions")
@@ -84,7 +84,7 @@ export class PermissionsController {
     type: PermissionEntity,
   })
   @Permissions(new PermissionEntity({ action: "DELETE", path: "/permissions" }))
-  async removeMany(@Body() idsDto: { ids: number[] }) {
+  async removeMany(@Body() idsDto: BatchIdsDto) {
     return await this.permissionsService.removeMany(idsDto.ids);
   }
 

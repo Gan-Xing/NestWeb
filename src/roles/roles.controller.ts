@@ -17,7 +17,7 @@ import {
 import { RolesService } from './roles.service';
 import { CreateRoleDto, UpdateRoleDto } from './dto';
 import { RoleEntity } from './entities';
-import { Permissions } from 'src/common';
+import { BatchIdsDto, Permissions } from 'src/common';
 import { PermissionEntity } from 'src/permissions/entities';
 
 @Controller('api/roles')
@@ -49,7 +49,7 @@ export class RolesController {
     type: RoleEntity,
   })
   @Permissions(new PermissionEntity({ action: 'DELETE', path: '/roles' }))
-  async removeMany(@Body() idsDto: { ids: number[] }) {
+  async removeMany(@Body() idsDto: BatchIdsDto) {
     return await this.rolesService.removeMany(idsDto.ids);
   }
 
