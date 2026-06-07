@@ -4,6 +4,7 @@ import {
   CanActivate,
   ExecutionContext,
   UnauthorizedException,
+  ForbiddenException,
 } from "@nestjs/common";
 import { Reflector } from "@nestjs/core";
 import {
@@ -20,14 +21,11 @@ export class PermissionsGuard implements CanActivate {
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    console.log("========== 权限验证开始 ==========");
     const permissions = this.reflector.getAllAndOverride<
       PermissionRequirement[]
     >(PERMISSIONS_KEY, [context.getHandler(), context.getClass()]);
-    console.log("需要的权限:", permissions);
 
     if (!permissions || permissions.length === 0) {
-      console.log("无需权限验证，直接通过");
       return true;
     }
 
@@ -35,33 +33,22 @@ export class PermissionsGuard implements CanActivate {
     const user = request.user;
 
     if (!user) {
-      console.log("用户未认证");
       throw new UnauthorizedException("Not authenticated");
     }
 
-    console.log("请求路径:", request.method, request.path);
-    console.log("路由路径:", request.route.path);
-    console.log("当前用户:", user.id);
-
     if (user.isAdmin) {
-      console.log("管理员用户，直接通过");
       return true;
     }
 
-    try {
-      const hasPermission = await this.permissionsService.checkUserPermissions(
-        user.id,
-        permissions,
-      );
+    const hasPermission = await this.permissionsService.checkUserPermissions(
+      user.id,
+      permissions,
+    );
 
-      if (!hasPermission) {
-        throw new UnauthorizedException("Insufficient permissions");
-      }
-
-      return hasPermission;
-    } catch (error) {
-      console.log("权限验证出错:", error.message);
-      throw error;
+    if (!hasPermission) {
+      throw new ForbiddenException("Insufficient permissions");
     }
+
+    return hasPermission;
   }
 }

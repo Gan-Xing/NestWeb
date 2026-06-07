@@ -3,12 +3,20 @@ import { NestExpressApplication } from "@nestjs/platform-express"; // ✅ 确保
 import { AppModule } from "./app.module";
 import { setupOpenApi } from "./openapi";
 
+function getCorsOrigin() {
+  const origins = process.env.CORS_ORIGINS?.split(",")
+    .map((origin) => origin.trim())
+    .filter(Boolean);
+
+  return origins?.length ? origins : true;
+}
+
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule); // ✅ 明确指定 Express
 
   app.set("query parser", "extended");
   app.enableCors({
-    origin: "*",
+    origin: getCorsOrigin(),
     methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
     preflightContinue: false,
     optionsSuccessStatus: 204,

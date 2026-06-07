@@ -1,9 +1,16 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { UnauthorizedException } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
 import { AuthService } from './auth.service';
 import { mockProviderFactories } from '../../test/unit-provider-mocks';
+import { UsersService } from 'src/users/users.service';
+import { PasswordService } from 'src/password/password.service';
 
 describe('AuthService', () => {
   let service: AuthService;
+  let jwtService: jest.Mocked<JwtService>;
+  let usersService: jest.Mocked<UsersService>;
+  let passwordService: jest.Mocked<PasswordService>;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -24,9 +31,32 @@ describe('AuthService', () => {
     }).compile();
 
     service = module.get<AuthService>(AuthService);
+    jwtService = module.get(JwtService);
+    usersService = module.get(UsersService);
+    passwordService = module.get(PasswordService);
   });
 
   it('should be defined', () => {
     expect(service).toBeDefined();
+  });
+
+  it('rejects refresh tokens when the user no longer exists', async () => {
+    jwtService.verify.mockReturnValue({ userId: 1 });
+    usersService.findOne.mockResolvedValue(null);
+
+    await expect(service.refreshToken('refresh-token')).rejects.toBeInstanceOf(
+      UnauthorizedException,
+    );
+    expect(passwordService.validatePassword).not.toHaveBeenCalled();
+  });
+
+  it('rejects refresh tokens when the stored refresh hash is missing', async () => {
+    jwtService.verify.mockReturnValue({ userId: 1 });
+    usersService.findOne.mockResolvedValue({ id: 1, hashedRt: null } as any);
+
+    await expect(service.refreshToken('refresh-token')).rejects.toBeInstanceOf(
+      UnauthorizedException,
+    );
+    expect(passwordService.validatePassword).not.toHaveBeenCalled();
   });
 });

@@ -13,13 +13,11 @@ export const API_ROUTES_MAP = {
   'GET /api/auth/wechat-miniprogram-qrcode': '获取微信小程序二维码',
   'POST /api/auth/exchange-code-for-user': '交换授权码获取用户',
   'POST /api/auth/miniprogram-login': '小程序登录',
-  'GET /api/auth/test-redis': '测试Redis连接',
   'POST /api/auth/login': '用户登录',
   'POST /api/auth/logout': '用户登出',
   'POST /api/auth/validateCaptcha': '校验验证码',
   'POST /api/auth/validateEmail': '校验邮箱验证码',
   'POST /api/auth/validateSMS': '校验短信验证码',
-  'POST /api/auth/testSMS': '测试短信服务',
   'POST /api/auth/register': '用户注册',
   'POST /api/auth/refresh': '刷新Token',
   'POST /api/auth/registerByEmail': '通过邮箱注册',
@@ -82,9 +80,13 @@ export const API_ROUTES_MAP = {
   'GET /api/system-log': '查询系统日志',
   'GET /api/system-log/:id': '获取指定日志详情',
 
+  // 诊断相关
+  'GET /api/diagnostics/redis': 'Redis诊断',
+  'POST /api/diagnostics/sms': '短信服务诊断',
+
   // 基础路由
   'GET /': '根路径',
-  'GET /greet': '测试用的greet路由',
+  'GET /api/health': '健康检查',
   'GET /metrics': '监控指标',
   'GET /api': 'API根路径',
   'GET /api/': 'API根路径',

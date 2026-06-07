@@ -37,14 +37,7 @@ export class AuthController {
 	@HttpCode(HttpStatus.OK)
 	async miniprogramLogin(@Body() body: any): Promise<any> {
 		const code = body.code;
-		console.log('=============正在登录', code);
 		return await this.auth.miniprogramLogin(code);
-	}
-
-	@Public()
-	@Get('test-redis')
-	async testRedis() {
-		return this.auth.testRedis();
 	}
 
 	@Public()
@@ -132,14 +125,6 @@ export class AuthController {
 		} else {
 			return { isValid: false };
 		}
-	}
-
-	@Public()
-	@Post('testSMS')
-	@ApiOkResponse({ description: 'Validate sms token and send Register' })
-	async validateSMS(@Body() ValidateTokenDto: ValidateTokenDto) {
-		const res = await this.auth.validateSMSVerificationCode(ValidateTokenDto);
-		return res;
 	}
 
 	@Public()

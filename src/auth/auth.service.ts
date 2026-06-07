@@ -102,7 +102,6 @@ export class AuthService {
 					grant_type: 'authorization_code'
 				}
 			});
-			console.log(response);
 			return response.data;
 
 			// 这里返回的数据包含 openid 和 unionid（如果有）
@@ -122,20 +121,6 @@ export class AuthService {
 		await this.updateRtHash(user.id, tokens.refreshToken);
 
 		return tokens;
-	}
-
-	// 测试 Redis 的方法
-	async testRedis(): Promise<void> {
-		// 使用默认客户端
-		await this.redisService.set('key1', 'value1');
-		const value1 = await this.redisService.get('key1');
-		console.log(`Value from default client: ${value1}`);
-
-		// // 使用次要客户端
-		// await this.redisService.set('key2', 'value2', 'secondary');
-		// const value2 = await this.redisService.get('key2', 'secondary');
-		// console.log(`Value from secondary client: ${value2}`);
-		// return this.redisClient.get('testKey');
 	}
 
 	async validateCaptcha(signupData: SignUpFormData): Promise<{ isValid: boolean }> {
@@ -272,11 +257,14 @@ export class AuthService {
 			secret: jwtConfig.refreshSecret
 		});
 		const user = await this.userService.findOne(userId);
+		if (!user?.hashedRt) {
+			throw new UnauthorizedException();
+		}
 		const isJwtValid = await this.passwordService.validatePassword(
 			token,
 			user.hashedRt
 		);
-		if (!user || !isJwtValid) {
+		if (!isJwtValid) {
 			throw new UnauthorizedException();
 		}
 		const tokens = await this.generateTokens({ userId });

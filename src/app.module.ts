@@ -30,6 +30,7 @@ import { WechatModule } from './wechat/wechat.module';
 import { StorageModule } from './storage/storage.module';
 import { ImagesModule } from './images/images.module';
 import { QueueModule } from './queue/queue.module';
+import { DiagnosticsModule } from './diagnostics/diagnostics.module';
 import * as path from 'path';
 import { PhoneNumberValidator } from './common/validators/phone.validator';
 import { SystemLogInterceptor } from './common/interceptors/system-log.interceptor';
@@ -49,6 +50,7 @@ import { SystemLogModule } from './system-log/system-log.module';
 		StorageModule,
 		ImagesModule,
 		QueueModule,
+		DiagnosticsModule,
 		ConfigModule.forRoot({
 			isGlobal: true,
 			load: [Config]
