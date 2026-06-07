@@ -1,9 +1,21 @@
-import { Injectable } from "@nestjs/common";
+import { BadRequestException, Injectable } from "@nestjs/common";
 import { PrismaService } from "src/prisma/prisma.service";
 import { UsersService } from "src/users/users.service";
 import { CreateMenuDto, UpdateMenuDto } from "./dto";
 
-const hiddenNavigationMenuCodes = ["auth.permissions"];
+const hiddenNavigationMenuCodes = ["auth.permissions", "auth.menus"];
+const systemManagedMenuCodes = new Set([
+  "dashboard",
+  "auth",
+  "auth.users",
+  "auth.roles",
+  "auth.permissions",
+  "auth.menus",
+  "resources",
+  "resources.images",
+  "system",
+  "system.logs",
+]);
 const visibleNavigationWhere = {
   visible: true,
   code: {
@@ -171,6 +183,7 @@ export class MenusService {
     if (!existingMenu) {
       throw new Error(`Menu with id ${id} does not exist`);
     }
+    assertNotSystemManagedMenu(existingMenu, "编辑");
 
     const { parentId, ...rest } = updateMenuDto;
 
@@ -209,8 +222,13 @@ export class MenusService {
       throw new Error(`Menu with id ${id} does not exist`);
     }
 
+    assertNotSystemManagedMenu(existingMenu, "删除");
+
     // Recursively get all child menu IDs
     const childMenuIds = await this.getChildMenuIds(id);
+    if (childMenuIds.length > 0) {
+      await this.assertNoSystemManagedMenus(childMenuIds);
+    }
 
     // Delete all child menus in one go
     await this.prisma.permissionGroup.deleteMany({
@@ -221,6 +239,24 @@ export class MenusService {
     return await this.prisma.permissionGroup.delete({
       where: { id },
     });
+  }
+
+  private async assertNoSystemManagedMenus(ids: number[]) {
+    const menus = await this.prisma.permissionGroup.findMany({
+      where: { id: { in: ids } },
+      select: {
+        code: true,
+        name: true,
+      },
+    });
+
+    const systemManagedMenu = menus.find((menu) =>
+      systemManagedMenuCodes.has(menu.code),
+    );
+
+    if (systemManagedMenu) {
+      assertNotSystemManagedMenu(systemManagedMenu, "删除");
+    }
   }
 
   async getChildMenuIds(
@@ -245,4 +281,17 @@ function buildMenuCode(path: string) {
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, ".")
     .replace(/(^\.+|\.+$)/g, "");
+}
+
+function assertNotSystemManagedMenu(
+  menu: { code: string; name: string },
+  operation: "编辑" | "删除",
+) {
+  if (!systemManagedMenuCodes.has(menu.code)) {
+    return;
+  }
+
+  throw new BadRequestException(
+    `系统内置菜单「${menu.name}」由代码种子维护，不能在后台${operation}`,
+  );
 }
