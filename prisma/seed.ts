@@ -278,6 +278,9 @@ const menuTree: MenuSeed[] = [
   },
 ];
 
+const legacyMenuCodes = ["_logs_2"];
+const legacyMenuPaths = ["/logs"];
+
 async function main() {
   const adminRole = await upsertRole("admin");
   const userRole = await upsertRole("User");
@@ -299,6 +302,7 @@ async function main() {
 
   await connectRolePermissions(userRole.id, ["dashboard.view"]);
   await upsertAdminUser(adminRole.id);
+  await hideLegacyMenus();
 }
 
 async function upsertRole(name: string) {
@@ -434,6 +438,28 @@ async function upsertAdminUser(adminRoleId: number) {
       roles: {
         connect: [{ id: adminRoleId }],
       },
+    },
+  });
+}
+
+async function hideLegacyMenus() {
+  await prisma.permissionGroup.updateMany({
+    where: {
+      OR: [
+        {
+          code: {
+            in: legacyMenuCodes,
+          },
+        },
+        {
+          path: {
+            in: legacyMenuPaths,
+          },
+        },
+      ],
+    },
+    data: {
+      visible: false,
     },
   });
 }
