@@ -13,6 +13,14 @@ Use this handoff document as the source of truth for future staged work. It
 records the agreed sequence for `Role.code`, frontend productization,
 Dashboard summary, Playwright E2E, and later security baseline work.
 
+## Enterprise Docs
+
+- [Deployment guide](docs/deployment.md)
+- [Environment variables](docs/env-vars.md)
+- [Permission model](docs/permission-model.md)
+- [Security baseline](docs/security-baseline.md)
+- [Rollback guide](docs/rollback.md)
+
 ## Common Commands
 
 ```bash
