@@ -407,6 +407,51 @@ const menuTree: MenuSeed[] = [
           },
         ],
       },
+      {
+        code: "system.status",
+        name: "系统状态",
+        path: "/system/status",
+        icon: "DashboardOutlined",
+        sort: 50,
+        permissions: [
+          {
+            code: "system.status.view",
+            name: "查看系统状态",
+            action: "GET",
+            path: "/system/status",
+          },
+        ],
+      },
+      {
+        code: "system.version",
+        name: "版本信息",
+        path: "/system/version",
+        icon: "InfoCircleOutlined",
+        sort: 60,
+        permissions: [
+          {
+            code: "system.version.view",
+            name: "查看版本信息",
+            action: "GET",
+            path: "/system/version",
+          },
+        ],
+      },
+      {
+        code: "system.queues",
+        name: "队列状态",
+        path: "/system/queues",
+        icon: "ClusterOutlined",
+        sort: 70,
+        permissions: [
+          {
+            code: "system.queues.view",
+            name: "查看队列状态",
+            action: "GET",
+            path: "/system/queues",
+          },
+        ],
+      },
     ],
   },
   {
@@ -427,7 +472,7 @@ const menuTree: MenuSeed[] = [
             code: "security.loginLogs.view",
             name: "查看登录日志",
             action: "GET",
-            path: "/login-logs",
+            path: "/security/login-logs",
           },
         ],
       },

@@ -82,6 +82,11 @@ export const API_ROUTES_MAP = {
   "DELETE /api/system-log/clear": "清空系统日志",
   "GET /api/system-log": "查询系统日志",
   "GET /api/system-log/:id": "获取指定日志详情",
+  "GET /api/security/login-logs": "查询登录日志",
+  "GET /api/security/login-logs/:id": "获取登录日志详情",
+  "GET /api/system/status": "查询系统状态",
+  "GET /api/system/version": "查询版本信息",
+  "GET /api/system/queues": "查询队列状态",
 
   // 诊断相关
   "GET /api/diagnostics/redis": "Redis诊断",

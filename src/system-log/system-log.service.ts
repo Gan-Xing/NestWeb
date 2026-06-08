@@ -2,7 +2,10 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { QueryLogDto } from './dto/query-log.dto';
 import { Prisma } from '@prisma/client';
-import { transformSystemLog } from './utils/log-transformer';
+import {
+  transformSystemLog,
+  transformSystemLogDetail,
+} from './utils/log-transformer';
 
 @Injectable()
 export class SystemLogService {
@@ -72,7 +75,7 @@ export class SystemLogService {
       throw new NotFoundException(`Log #${id} not found`);
     }
 
-    return log;
+    return transformSystemLogDetail(log);
   }
 
   async clear(days: number) {
@@ -115,4 +118,4 @@ export class SystemLogService {
 
     return logs;
   }
-} 
+}

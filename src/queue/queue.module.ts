@@ -18,6 +18,22 @@ import {
 
 @Module({
   imports: [
+    BullModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => {
+        const password = configService.get<string>("REDIS_PASSWORD_DEFAULT");
+
+        return {
+          redis: {
+            host: configService.get<string>("REDIS_HOST_DEFAULT") ?? "localhost",
+            port: configService.get<number>("REDIS_PORT_DEFAULT") ?? 6379,
+            db: configService.get<number>("REDIS_DB_DEFAULT") ?? 0,
+            ...(password ? { password } : {}),
+          },
+        };
+      },
+    }),
     RabbitMQModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
@@ -83,6 +99,6 @@ import {
     }),
     IpGeoProcessor
   ],
-  exports: [EmailProducer, BullModule]
+  exports: [EmailProducer, BullModule, RabbitMQModule]
 })
 export class QueueModule {} 

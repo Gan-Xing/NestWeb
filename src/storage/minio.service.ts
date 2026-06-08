@@ -405,4 +405,8 @@ export class MinioStorageService implements IStorageService, OnModuleInit {
       return false;
     }
   }
+
+  async checkHealth(bucket: string = this.defaultBucket): Promise<void> {
+    await this.minioInternalClient.bucketExists(bucket);
+  }
 }

@@ -11,4 +11,5 @@ export interface IStorageService {
   deleteFile(path: string, bucket?: string): Promise<boolean>;
   getPresignedUrl(path: string, bucket?: string): Promise<string>;
   moveFile(oldPath: string, newPath: string, bucket?: string): Promise<boolean>;
-} 
+  checkHealth(bucket?: string): Promise<void>;
+}
