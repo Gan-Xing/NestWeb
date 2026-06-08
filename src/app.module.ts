@@ -55,6 +55,8 @@ import { DictsModule } from "./dicts/dicts.module";
 import { SystemConfigModule } from "./system-config/system-config.module";
 import { FilesModule } from "./files/files.module";
 import { SystemModule } from "./system/system.module";
+import { MessagesModule } from "./messages/messages.module";
+import { ApprovalRequestsModule } from "./approval-requests/approval-requests.module";
 import * as path from "path";
 import { PhoneNumberValidator } from "./common/validators/phone.validator";
 import { SystemLogInterceptor } from "./common/interceptors/system-log.interceptor";
@@ -82,6 +84,8 @@ import { SystemLogModule } from "./system-log/system-log.module";
     SystemConfigModule,
     FilesModule,
     SystemModule,
+    MessagesModule,
+    ApprovalRequestsModule,
     ThrottlerModule.forRoot(buildThrottlerOptions()),
     ConfigModule.forRoot({
       isGlobal: true,

@@ -7,6 +7,39 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum MessageType {
+  NOTIFICATION
+  TODO
+}
+
+enum MessageCategory {
+  SYSTEM
+  SECURITY
+  APPROVAL
+  TASK
+  CUSTOM
+}
+
+enum ApprovalRequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELLED
+}
+
+enum ApprovalActionType {
+  SUBMIT
+  APPROVE
+  REJECT
+  CANCEL
+  COMMENT
+}
+
+enum ApprovalApproverType {
+  USER
+  ROLE
+}
+
 model Role {
   id          Int          @id @default(autoincrement())
   code        String       @unique
@@ -55,32 +88,37 @@ model PermissionGroup {
 }
 
 model User {
-  id                Int         @id @default(autoincrement())
+  id                Int               @id @default(autoincrement())
   firstName         String?
   lastName          String?
-  phoneNumber       String?     @unique
-  email             String?     @unique
+  phoneNumber       String?           @unique
+  email             String?           @unique
   password          String?
-  createdAt         DateTime    @default(now())
+  createdAt         DateTime          @default(now())
   status            String?
   username          String?
   gender            String?
   departmentId      Int?
-  updatedAt         DateTime    @updatedAt
+  updatedAt         DateTime          @updatedAt
   lastLoginAt       DateTime?
   lastLoginIp       String?
   passwordUpdatedAt DateTime?
   hashedRt          String?
-  isAdmin           Boolean     @default(false)
+  isAdmin           Boolean           @default(false)
   avatar            String?
-  wechatId          String?     @unique
+  wechatId          String?           @unique
   miniWechatId      String?
   articles          Article[]
   images            Image[]
-  roles             Role[]      @relation("UserRoles")
+  roles             Role[]            @relation("UserRoles")
   systemLogs        SystemLog[]
   loginLogs         LoginLog[]
   fileAssets        FileAsset[]
+  messages          Message[]         @relation("UserMessages")
+  createdMessages   Message[]         @relation("MessageCreator")
+  approvalRequests  ApprovalRequest[] @relation("ApprovalApplicant")
+  approvalApprovals ApprovalRequest[] @relation("ApprovalApproverUser")
+  approvalActions   ApprovalAction[]  @relation("ApprovalActionActor")
 }
 
 model DictType {
@@ -176,6 +214,74 @@ model LoginLog {
   @@index([email])
   @@index([success, createdAt])
   @@map("login_logs")
+}
+
+model Message {
+  id           Int             @id @default(autoincrement())
+  userId       Int
+  title        String
+  content      String?
+  type         MessageType
+  category     MessageCategory @default(SYSTEM)
+  link         String?
+  businessType String?
+  businessId   String?
+  readAt       DateTime?
+  completedAt  DateTime?
+  cancelledAt  DateTime?
+  createdById  Int?
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+  user         User            @relation("UserMessages", fields: [userId], references: [id], onDelete: Cascade)
+  createdBy    User?           @relation("MessageCreator", fields: [createdById], references: [id], onDelete: SetNull)
+
+  @@index([userId, type, createdAt])
+  @@index([userId, readAt])
+  @@index([userId, completedAt])
+  @@index([businessType, businessId])
+  @@map("messages")
+}
+
+model ApprovalRequest {
+  id               Int                   @id @default(autoincrement())
+  title            String
+  description      String?
+  businessType     String
+  businessId       String?
+  payload          Json?
+  applicantId      Int
+  approverType     ApprovalApproverType
+  approverUserId   Int?
+  approverRoleCode String?
+  status           ApprovalRequestStatus @default(PENDING)
+  createdAt        DateTime              @default(now())
+  updatedAt        DateTime              @updatedAt
+  decidedAt        DateTime?
+  applicant        User                  @relation("ApprovalApplicant", fields: [applicantId], references: [id], onDelete: Restrict)
+  approverUser     User?                 @relation("ApprovalApproverUser", fields: [approverUserId], references: [id], onDelete: SetNull)
+  actions          ApprovalAction[]
+
+  @@index([businessType, businessId])
+  @@index([applicantId, createdAt])
+  @@index([status, createdAt])
+  @@index([approverUserId, status])
+  @@index([approverRoleCode, status])
+  @@map("approval_requests")
+}
+
+model ApprovalAction {
+  id        Int                @id @default(autoincrement())
+  requestId Int
+  actorId   Int
+  action    ApprovalActionType
+  comment   String?
+  createdAt DateTime           @default(now())
+  request   ApprovalRequest    @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  actor     User               @relation("ApprovalActionActor", fields: [actorId], references: [id], onDelete: Restrict)
+
+  @@index([requestId, createdAt])
+  @@index([actorId, createdAt])
+  @@map("approval_actions")
 }
 
 model Article {

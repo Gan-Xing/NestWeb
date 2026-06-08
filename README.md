@@ -8,6 +8,7 @@ It is paired with `Antdpro6` for the frontend.
 The current enterprise modernization plan is saved here:
 
 - [Single-enterprise handoff v2](docs/handoff/ts-fullstack-single-enterprise-handoff-v2.md)
+- [S8 message approval export handoff](docs/handoff/ts-fullstack-s8-message-approval-export-handoff.md)
 - [TS full-stack enterprise handoff](docs/handoff/ts-fullstack-enterprise-handoff.md)
 - [Single-enterprise handoff and prompts](docs/handoff/single-enterprise-handoff-and-prompts.md)
 

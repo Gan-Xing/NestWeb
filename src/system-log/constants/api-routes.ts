@@ -25,6 +25,23 @@ export const API_ROUTES_MAP = {
   // 工作台相关
   "GET /api/dashboard/summary": "获取工作台汇总",
 
+  // 消息中心相关
+  "GET /api/messages": "查询消息",
+  "GET /api/messages/unread-count": "查询未读消息数量",
+  "POST /api/messages/read-all": "全部通知标记已读",
+  "POST /api/messages/:id/read": "消息标记已读",
+  "POST /api/messages/:id/complete": "完成待办",
+  "POST /api/messages/:id/cancel": "取消待办",
+
+  // 审批请求相关
+  "GET /api/approval-requests": "查询审批请求",
+  "POST /api/approval-requests": "创建审批请求",
+  "GET /api/approval-requests/:id": "获取审批请求详情",
+  "POST /api/approval-requests/:id/approve": "通过审批请求",
+  "POST /api/approval-requests/:id/reject": "驳回审批请求",
+  "POST /api/approval-requests/:id/cancel": "取消审批请求",
+  "POST /api/approval-requests/:id/comment": "评论审批请求",
+
   // 验证码相关
   "GET /api/captcha": "生成验证码",
   "GET /api/captcha/validate": "校验验证码",
