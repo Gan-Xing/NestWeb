@@ -50,6 +50,10 @@ export function createPrismaMock() {
 		permissionGroup: createMockObject(),
 		role: createMockObject(),
 		loginLog: createMockObject(),
+		dictType: createMockObject(),
+		dictItem: createMockObject(),
+		systemConfig: createMockObject(),
+		fileAsset: createMockObject(),
 		user: createMockObject()
 	};
 }

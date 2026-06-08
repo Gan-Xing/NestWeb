@@ -80,6 +80,83 @@ model User {
   roles             Role[]      @relation("UserRoles")
   systemLogs        SystemLog[]
   loginLogs         LoginLog[]
+  fileAssets        FileAsset[]
+}
+
+model DictType {
+  id          Int        @id @default(autoincrement())
+  code        String     @unique
+  name        String
+  description String?
+  enabled     Boolean    @default(true)
+  sort        Int        @default(0)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  items       DictItem[]
+
+  @@index([enabled, sort])
+  @@map("dict_types")
+}
+
+model DictItem {
+  id          Int      @id @default(autoincrement())
+  dictTypeId  Int
+  code        String
+  label       String
+  value       String
+  color       String?
+  description String?
+  enabled     Boolean  @default(true)
+  sort        Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  dictType    DictType @relation(fields: [dictTypeId], references: [id], onDelete: Cascade)
+
+  @@unique([dictTypeId, code])
+  @@unique([dictTypeId, value])
+  @@index([dictTypeId, enabled, sort])
+  @@map("dict_items")
+}
+
+model SystemConfig {
+  id          Int      @id @default(autoincrement())
+  key         String   @unique
+  name        String
+  value       String
+  valueType   String   @default("string")
+  group       String   @default("general")
+  description String?
+  editable    Boolean  @default(true)
+  enabled     Boolean  @default(true)
+  sort        Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([group, enabled, sort])
+  @@map("system_configs")
+}
+
+model FileAsset {
+  id           Int       @id @default(autoincrement())
+  originalName String
+  filename     String
+  storagePath  String    @unique
+  url          String
+  mimeType     String
+  size         Int
+  extension    String?
+  category     String?
+  description  String?
+  uploaderId   Int?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  deletedAt    DateTime?
+  uploader     User?     @relation(fields: [uploaderId], references: [id], onDelete: SetNull)
+
+  @@index([category])
+  @@index([uploaderId, createdAt])
+  @@index([deletedAt, createdAt])
+  @@map("file_assets")
 }
 
 model LoginLog {

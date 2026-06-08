@@ -31,6 +31,36 @@ type RoleSeed = {
   permissions: string[];
 };
 
+type DictItemSeed = {
+  code: string;
+  label: string;
+  value: string;
+  color?: string;
+  description?: string;
+  sort: number;
+  enabled?: boolean;
+};
+
+type DictTypeSeed = {
+  code: string;
+  name: string;
+  description?: string;
+  sort: number;
+  items: DictItemSeed[];
+};
+
+type SystemConfigSeed = {
+  key: string;
+  name: string;
+  value: string;
+  valueType: string;
+  group: string;
+  description?: string;
+  editable: boolean;
+  enabled?: boolean;
+  sort: number;
+};
+
 const menuTree: MenuSeed[] = [
   {
     code: "dashboard",
@@ -290,6 +320,93 @@ const menuTree: MenuSeed[] = [
           },
         ],
       },
+      {
+        code: "system.dicts",
+        name: "字典管理",
+        path: "/system/dicts",
+        icon: "ProfileOutlined",
+        sort: 20,
+        permissions: [
+          {
+            code: "system.dicts.view",
+            name: "查看字典",
+            action: "GET",
+            path: "/dicts",
+          },
+          {
+            code: "system.dicts.create",
+            name: "新增字典",
+            action: "POST",
+            path: "/dicts",
+          },
+          {
+            code: "system.dicts.update",
+            name: "编辑字典",
+            action: "PATCH",
+            path: "/dicts",
+          },
+          {
+            code: "system.dicts.delete",
+            name: "删除字典",
+            action: "DELETE",
+            path: "/dicts",
+          },
+        ],
+      },
+      {
+        code: "system.config",
+        name: "系统参数",
+        path: "/system/config",
+        icon: "ControlOutlined",
+        sort: 30,
+        permissions: [
+          {
+            code: "system.config.view",
+            name: "查看系统参数",
+            action: "GET",
+            path: "/system-config",
+          },
+          {
+            code: "system.config.update",
+            name: "编辑系统参数",
+            action: "PATCH",
+            path: "/system-config",
+          },
+        ],
+      },
+      {
+        code: "system.files",
+        name: "文件中心",
+        path: "/system/files",
+        icon: "CloudUploadOutlined",
+        sort: 40,
+        permissions: [
+          {
+            code: "system.files.view",
+            name: "查看文件",
+            action: "GET",
+            path: "/files",
+          },
+          {
+            code: "system.files.upload",
+            name: "上传文件",
+            action: "POST",
+            path: "/files/upload",
+          },
+          {
+            code: "system.files.download",
+            name: "下载文件",
+            action: "GET",
+            path: "/files/download",
+          },
+          {
+            code: "system.files.delete",
+            name: "删除文件",
+            action: "DELETE",
+            path: "/files",
+          },
+        ],
+      },
     ],
   },
   {
@@ -352,6 +469,116 @@ const menuTree: MenuSeed[] = [
         ],
       },
     ],
+  },
+];
+
+const dictTypeSeeds: DictTypeSeed[] = [
+  {
+    code: "user.status",
+    name: "用户状态",
+    description: "账号生命周期状态",
+    sort: 10,
+    items: [
+      { code: "active", label: "启用", value: "active", color: "success", sort: 10 },
+      { code: "disabled", label: "禁用", value: "disabled", color: "error", sort: 20 },
+      { code: "resigned", label: "离职", value: "resigned", color: "default", sort: 30 },
+    ],
+  },
+  {
+    code: "user.gender",
+    name: "性别",
+    description: "用户基础资料性别选项",
+    sort: 20,
+    items: [
+      { code: "male", label: "男", value: "Male", color: "blue", sort: 10 },
+      { code: "female", label: "女", value: "Female", color: "magenta", sort: 20 },
+    ],
+  },
+  {
+    code: "image.category",
+    name: "图片分类",
+    description: "图片资源分类",
+    sort: 30,
+    items: [
+      { code: "progress", label: "进度", value: "progress", color: "blue", sort: 10 },
+      { code: "safety", label: "安全", value: "safety", color: "red", sort: 20 },
+      { code: "quality", label: "质量", value: "quality", color: "green", sort: 30 },
+    ],
+  },
+  {
+    code: "knowledge.document.status",
+    name: "知识文档状态",
+    description: "为后续知识库 MVP 预留",
+    sort: 40,
+    items: [
+      { code: "draft", label: "草稿", value: "draft", color: "default", sort: 10 },
+      { code: "published", label: "已发布", value: "published", color: "success", sort: 20 },
+      { code: "archived", label: "已归档", value: "archived", color: "warning", sort: 30 },
+    ],
+  },
+  {
+    code: "knowledge.space.visibility",
+    name: "知识空间可见性",
+    description: "为后续知识库 MVP 预留",
+    sort: 50,
+    items: [
+      { code: "private", label: "私有", value: "private", color: "default", sort: 10 },
+      { code: "internal", label: "企业内部", value: "internal", color: "blue", sort: 20 },
+      { code: "public", label: "公开", value: "public", color: "success", sort: 30 },
+    ],
+  },
+];
+
+const systemConfigSeeds: SystemConfigSeed[] = [
+  {
+    key: "app.name",
+    name: "应用名称",
+    value: "企业管理后台",
+    valueType: "string",
+    group: "app",
+    description: "页面标题、品牌展示和系统识别名称",
+    editable: true,
+    sort: 10,
+  },
+  {
+    key: "app.description",
+    name: "应用说明",
+    value: "单企业版通用后台底座",
+    valueType: "string",
+    group: "app",
+    description: "用于工作台或关于页展示的系统说明",
+    editable: true,
+    sort: 20,
+  },
+  {
+    key: "security.password.minLength",
+    name: "密码最小长度",
+    value: "8",
+    valueType: "number",
+    group: "security",
+    description: "账号密码最小长度；当前后端 DTO 仍以代码校验为准",
+    editable: false,
+    sort: 10,
+  },
+  {
+    key: "file.maxUploadSizeMb",
+    name: "文件上传上限 MB",
+    value: "50",
+    valueType: "number",
+    group: "file",
+    description: "文件中心上传大小上限；当前接口常量为 50MB",
+    editable: false,
+    sort: 10,
+  },
+  {
+    key: "knowledge.enabled",
+    name: "知识库功能预留",
+    value: "false",
+    valueType: "boolean",
+    group: "knowledge",
+    description: "S4 知识库 MVP 前的功能开关预留项",
+    editable: true,
+    sort: 10,
   },
 ];
 
@@ -480,6 +707,8 @@ async function main() {
   }
 
   await upsertAdminUser(adminRole.id);
+  await upsertDictTypes();
+  await upsertSystemConfigs();
   await migrateLegacyPermissionAliases();
   await hideLegacyMenus();
 }
@@ -604,6 +833,84 @@ async function connectRolePermissions(
       },
     },
   });
+}
+
+async function upsertDictTypes() {
+  for (const dictTypeSeed of dictTypeSeeds) {
+    const dictType = await prisma.dictType.upsert({
+      where: { code: dictTypeSeed.code },
+      create: {
+        code: dictTypeSeed.code,
+        name: dictTypeSeed.name,
+        description: dictTypeSeed.description,
+        sort: dictTypeSeed.sort,
+        enabled: true,
+      },
+      update: {
+        name: dictTypeSeed.name,
+        description: dictTypeSeed.description,
+        sort: dictTypeSeed.sort,
+        enabled: true,
+      },
+    });
+
+    for (const itemSeed of dictTypeSeed.items) {
+      await prisma.dictItem.upsert({
+        where: {
+          dictTypeId_code: {
+            dictTypeId: dictType.id,
+            code: itemSeed.code,
+          },
+        },
+        create: {
+          dictTypeId: dictType.id,
+          code: itemSeed.code,
+          label: itemSeed.label,
+          value: itemSeed.value,
+          color: itemSeed.color,
+          description: itemSeed.description,
+          sort: itemSeed.sort,
+          enabled: itemSeed.enabled ?? true,
+        },
+        update: {
+          label: itemSeed.label,
+          value: itemSeed.value,
+          color: itemSeed.color,
+          description: itemSeed.description,
+          sort: itemSeed.sort,
+          enabled: itemSeed.enabled ?? true,
+        },
+      });
+    }
+  }
+}
+
+async function upsertSystemConfigs() {
+  for (const config of systemConfigSeeds) {
+    await prisma.systemConfig.upsert({
+      where: { key: config.key },
+      create: {
+        key: config.key,
+        name: config.name,
+        value: config.value,
+        valueType: config.valueType,
+        group: config.group,
+        description: config.description,
+        editable: config.editable,
+        enabled: config.enabled ?? true,
+        sort: config.sort,
+      },
+      update: {
+        name: config.name,
+        valueType: config.valueType,
+        group: config.group,
+        description: config.description,
+        editable: config.editable,
+        enabled: config.enabled ?? true,
+        sort: config.sort,
+      },
+    });
+  }
 }
 
 async function upsertAdminUser(adminRoleId: number) {
