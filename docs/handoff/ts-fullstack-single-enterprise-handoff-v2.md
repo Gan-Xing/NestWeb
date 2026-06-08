@@ -11,6 +11,32 @@
 
 ---
 
+## 0. 当前阶段状态
+
+更新时间：2026-06-08
+
+```text
+S0：修订 handoff 与开发约束              已完成
+S1：工程基线                            已完成
+S2：账号安全 + 角色能力包               已完成
+S3：系统配置 + 字典 + 文件中心          已完成
+S4：知识库 MVP                          暂停，不在当前交付范围
+S5：审计运维                            已完成
+S6：AI 知识助手预留                     暂停，不在当前交付范围
+S7：E2E / 文档 / 交付收口               已完成
+```
+
+当前交付约束：
+
+- 不新增 KnowledgeSpace / KnowledgeDocument / KnowledgeTag。
+- 不新增 RAG / 向量检索 / 文档分块。
+- 不新增 Tenant / UserTenant。
+- 不新增 Department / Position。
+- 不重构 RBAC。
+- S7 只补 E2E、错误页、空状态、文档和发布检查清单。
+
+---
+
 ## 1. 当前判断
 
 ### 1.1 已具备的基础
@@ -1135,29 +1161,39 @@ Antdpro6：
 ### S7 Prompt
 
 ```text
-请只执行 S7：E2E / 文档 / 交付收口。
+请只执行 S7：交付收口。
 
-任务：
-1. Playwright E2E 增加：
-   - 登录失败
-   - 禁用用户登录失败
-   - 用户管理基本流
-   - 角色 description 修改
-   - 字典管理
-   - 知识空间创建
-   - 知识文档创建 / 发布 / 查看
-2. 更新 NestWeb README。
-3. 更新 Antdpro6 README。
-4. 更新权限码清单文档。
-5. 更新环境变量文档。
-6. 更新部署文档。
-7. 新增备份恢复文档。
-8. 更新 handoff 当前完成状态。
+已完成阶段：S1 / S2 / S3 / S5。
+暂停阶段：S4 知识库 MVP、S6 AI 知识助手。
+
+严格禁止：
+- 不新增 KnowledgeSpace / KnowledgeDocument / KnowledgeTag。
+- 不新增 RAG / 向量检索 / 文档分块。
+- 不新增 Tenant / UserTenant。
+- 不新增 Department / Position。
+- 不重构 RBAC。
+- 不新增大功能。
+
+Antdpro6：
+1. Playwright E2E 覆盖登录成功、登录失败、刷新保持登录、token refresh、退出登录、退出后访问保护页跳登录。
+2. E2E 覆盖 Dashboard、/system/status、/system/version、/system/queues、/security/login-logs。
+3. E2E 覆盖无权限菜单不可见或直接访问受限。
+4. 补 403、500、网络异常 / 请求失败 Result、统一表格空状态。
+5. 检查产品化残留，SettingDrawer / OpenAPI 链接只允许 dev 展示。
+
+NestWeb：
+1. 检查 seed 当前菜单和权限码。
+2. 检查 Swagger / OpenAPI 覆盖当前前端使用接口。
+3. 检查 health / status / version / queues / login-logs / system-logs 权限和文档。
+4. 只允许修复 S5 遗留小问题，不新增业务模型。
+
+文档：
+1. 更新 handoff 状态。
+2. 新增 / 更新页面清单、权限码清单、环境变量、部署流程、运维排障、发布检查清单。
+3. 更新两个 README 指向上述文档。
 
 验收：
-- 两个仓库 CI 命令全部通过。
-- E2E 可手动触发。
-- 新模块文档完整。
-- 新增权限码有说明。
-- 有回滚说明。
+- NestWeb: lint:check / test -- --runInBand / build 通过。
+- Antdpro6: tsc / test -- --runInBand / build / e2e 通过。
+- S4 / S6 仍标记为暂停。
 ```

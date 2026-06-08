@@ -7,19 +7,24 @@ It is paired with `Antdpro6` for the frontend.
 
 The current enterprise modernization plan is saved here:
 
+- [Single-enterprise handoff v2](docs/handoff/ts-fullstack-single-enterprise-handoff-v2.md)
 - [TS full-stack enterprise handoff](docs/handoff/ts-fullstack-enterprise-handoff.md)
 - [Single-enterprise handoff and prompts](docs/handoff/single-enterprise-handoff-and-prompts.md)
 
-Use this handoff document as the source of truth for future staged work. It
-records the agreed sequence for `Role.code`, frontend productization,
-Dashboard summary, Playwright E2E, and later security baseline work.
+Use the v2 handoff document as the source of truth for current staged work.
+S1, S2, S3, S5, and S7 are the active completed baseline; S4 knowledge base and
+S6 AI assistant remain paused.
 
 ## Enterprise Docs
 
 - [Deployment guide](docs/deployment.md)
 - [Environment variables](docs/env-vars.md)
+- [Page inventory](docs/pages.md)
+- [Permission code inventory](docs/permissions.md)
 - [Permission model](docs/permission-model.md)
 - [Security baseline](docs/security-baseline.md)
+- [Operations runbook](docs/ops-runbook.md)
+- [Release checklist](docs/release-checklist.md)
 - [Rollback guide](docs/rollback.md)
 
 ## Common Commands
@@ -55,9 +60,9 @@ Use `/api/health/live` for process liveness and `/api/health/ready` for
 readiness checks that verify database and Redis connectivity. The Docker
 Compose API healthcheck uses readiness.
 
-RabbitMQ and MinIO readiness checks are tracked as an S1 TODO. They should be
-added when queue/storage availability must block traffic, using cheap probes
-that do not create objects or messages.
+Authenticated operations checks are available at `/api/system/status`,
+`/api/system/version`, and `/api/system/queues`. Use `/api/system/status` for
+DB, Redis, RabbitMQ, MinIO, and Bull queue diagnostics after login.
 
 ## Notes For Future Work
 

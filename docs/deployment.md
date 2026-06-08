@@ -107,13 +107,16 @@ development.
 - `GET /api/health`: backward-compatible liveness payload
 - `GET /api/health/live`: process liveness only
 - `GET /api/health/ready`: readiness check for database and Redis
+- `GET /api/system/status`: authenticated operations status for database, Redis, RabbitMQ, MinIO, and queue
+- `GET /api/system/version`: authenticated version metadata
+- `GET /api/system/queues`: authenticated Bull queue counters
 
 Use `/api/health/live` for restart probes and `/api/health/ready` for traffic
 readiness or Docker health checks.
 
-RabbitMQ and MinIO are runtime integrations but are not yet part of the
-readiness gate. S1 keeps the probe low-cost and documents the gap; add explicit
-RabbitMQ and MinIO checks before queue/storage outages must block traffic.
+Use `/api/system/status` after administrator login when RabbitMQ, MinIO, or
+queue availability must be diagnosed. These integrations are intentionally not
+part of the unauthenticated readiness gate.
 
 ## OpenAPI
 

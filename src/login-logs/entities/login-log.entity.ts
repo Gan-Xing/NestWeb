@@ -36,3 +36,25 @@ export class LoginLogEntity implements LoginLog {
   @ApiProperty()
   createdAt: Date;
 }
+
+export class LoginLogPaginationEntity {
+  @ApiProperty()
+  current: number;
+
+  @ApiProperty()
+  pageSize: number;
+
+  @ApiProperty()
+  total: number;
+
+  @ApiProperty()
+  totalPages: number;
+}
+
+export class LoginLogListEntity {
+  @ApiProperty({ type: [LoginLogEntity] })
+  data: LoginLogEntity[];
+
+  @ApiProperty({ type: LoginLogPaginationEntity })
+  pagination: LoginLogPaginationEntity;
+}
