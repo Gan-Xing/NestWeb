@@ -18,7 +18,12 @@ import {
   ApiQuery,
 } from "@nestjs/swagger";
 import { UsersService } from "./users.service";
-import { CreateUserDto, UpdateUserDto } from "./dto";
+import {
+  CreateUserDto,
+  ResetPasswordDto,
+  UpdateUserDto,
+  UpdateUserStatusDto,
+} from "./dto";
 import { UserEntity } from "./entities";
 import { BatchIdsDto, CurrentUser, Permissions } from "src/common";
 import { PermissionEntity } from "src/permissions/entities";
@@ -75,7 +80,7 @@ export class UsersController {
   @ApiBearerAuth()
   @ApiOkResponse({ description: "Get current user.", type: UserEntity })
   async findCurrent(@Req() req) {
-    const user = await this.usersService.findOneWithRolesAndPermissions(
+    const user = await this.usersService.findOneWithRolesPermissionsAndRecentLogin(
       req.user.id,
     );
     return new UserEntity(user);
@@ -86,7 +91,9 @@ export class UsersController {
   @ApiOkResponse({ description: "Find a user by id.", type: UserEntity }) // 单个User，直接使用type: User
   @Permissions(new PermissionEntity({ action: "GET", path: "/users" }))
   async findOne(@Param("id", ParseIntPipe) id: number) {
-    return new UserEntity(await this.usersService.findOne(id));
+    return new UserEntity(
+      await this.usersService.findOneWithRolesPermissionsAndRecentLogin(id),
+    );
   }
 
   @Patch(":id")
@@ -101,6 +108,33 @@ export class UsersController {
     return new UserEntity(
       await this.usersService.updateUser(id, updateUserDto, currentUserId),
     );
+  }
+
+  @Patch(":id/status")
+  @ApiBearerAuth()
+  @ApiOkResponse({ description: "Update a user status.", type: UserEntity })
+  @Permissions(new PermissionEntity({ action: "PATCH", path: "/users/status" }))
+  async updateStatus(
+    @Param("id", ParseIntPipe) id: number,
+    @Body() dto: UpdateUserStatusDto,
+    @CurrentUser("id") currentUserId: number,
+  ) {
+    return new UserEntity(
+      await this.usersService.updateUserStatus(id, dto, currentUserId),
+    );
+  }
+
+  @Post(":id/reset-password")
+  @ApiBearerAuth()
+  @ApiOkResponse({ description: "Reset a user password.", type: UserEntity })
+  @Permissions(
+    new PermissionEntity({ action: "POST", path: "/users/reset-password" }),
+  )
+  async resetPassword(
+    @Param("id", ParseIntPipe) id: number,
+    @Body() dto: ResetPasswordDto,
+  ) {
+    return new UserEntity(await this.usersService.resetPassword(id, dto));
   }
 
   @Delete()

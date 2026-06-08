@@ -5,12 +5,14 @@ import { AuthService } from './auth.service';
 import { mockProviderFactories } from '../../test/unit-provider-mocks';
 import { UsersService } from 'src/users/users.service';
 import { PasswordService } from 'src/password/password.service';
+import { PrismaService } from 'src/prisma/prisma.service';
 
 describe('AuthService', () => {
   let service: AuthService;
   let jwtService: jest.Mocked<JwtService>;
   let usersService: jest.Mocked<UsersService>;
   let passwordService: jest.Mocked<PasswordService>;
+  let prisma: PrismaService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -34,6 +36,7 @@ describe('AuthService', () => {
     jwtService = module.get(JwtService);
     usersService = module.get(UsersService);
     passwordService = module.get(PasswordService);
+    prisma = module.get(PrismaService);
   });
 
   it('should be defined', () => {
@@ -58,5 +61,34 @@ describe('AuthService', () => {
       UnauthorizedException,
     );
     expect(passwordService.validatePassword).not.toHaveBeenCalled();
+  });
+
+  it('rejects disabled users and writes a failed login log', async () => {
+    usersService.findOneByEmail.mockResolvedValue({
+      id: 1,
+      email: 'disabled@example.com',
+      username: 'disabled-user',
+      status: 'disabled',
+      password: 'hashed-password',
+    } as any);
+
+    await expect(
+      service.login('disabled@example.com', 'password123', {
+        ip: '127.0.0.1',
+        userAgent: 'jest',
+      }),
+    ).rejects.toBeInstanceOf(UnauthorizedException);
+
+    expect(passwordService.validatePassword).not.toHaveBeenCalled();
+    expect(prisma.loginLog.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        userId: 1,
+        email: 'disabled@example.com',
+        success: false,
+        failureCode: 'user_disabled',
+        ip: '127.0.0.1',
+        userAgent: 'jest',
+      }),
+    });
   });
 });

@@ -11,25 +11,29 @@ model Role {
   id          Int          @id @default(autoincrement())
   code        String       @unique
   name        String
+  description String?
+  sort        Int          @default(0)
+  enabled     Boolean      @default(true)
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
   permissions Permission[] @relation("PermissionToRole")
   users       User[]       @relation("UserRoles")
 
   @@index([name])
+  @@index([enabled, sort])
 }
 
 model Permission {
-  id        Int      @id @default(autoincrement())
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  code      String   @unique @default(uuid())
-  name      String
-  action    String
-  path      String
+  id                Int             @id @default(autoincrement())
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+  code              String          @unique @default(uuid())
+  name              String
+  action            String
+  path              String
   permissionGroupId Int
   permissionGroup   PermissionGroup @relation(fields: [permissionGroupId], references: [id])
-  roles     Role[]   @relation("PermissionToRole")
+  roles             Role[]          @relation("PermissionToRole")
 
   @@map("permissions")
 }
@@ -51,27 +55,50 @@ model PermissionGroup {
 }
 
 model User {
-  id           Int       @id @default(autoincrement())
-  firstName    String? 
-  lastName     String?
-  phoneNumber  String?   @unique 
-  email        String?   @unique
-  password     String?
-  createdAt    DateTime  @default(now())
-  status       String?
-  username     String?
-  gender       String?
-  departmentId Int?
-  updatedAt    DateTime  @updatedAt
-  hashedRt     String?
-  isAdmin      Boolean   @default(false)
-  avatar       String?
-  wechatId     String?   @unique
-  miniWechatId String?
-  articles     Article[]
-  images       Image[]
-  roles        Role[]    @relation("UserRoles")
-  systemLogs   SystemLog[]
+  id                Int         @id @default(autoincrement())
+  firstName         String?
+  lastName          String?
+  phoneNumber       String?     @unique
+  email             String?     @unique
+  password          String?
+  createdAt         DateTime    @default(now())
+  status            String?
+  username          String?
+  gender            String?
+  departmentId      Int?
+  updatedAt         DateTime    @updatedAt
+  lastLoginAt       DateTime?
+  lastLoginIp       String?
+  passwordUpdatedAt DateTime?
+  hashedRt          String?
+  isAdmin           Boolean     @default(false)
+  avatar            String?
+  wechatId          String?     @unique
+  miniWechatId      String?
+  articles          Article[]
+  images            Image[]
+  roles             Role[]      @relation("UserRoles")
+  systemLogs        SystemLog[]
+  loginLogs         LoginLog[]
+}
+
+model LoginLog {
+  id            Int      @id @default(autoincrement())
+  userId        Int?
+  username      String?
+  email         String?
+  ip            String?
+  userAgent     String?
+  success       Boolean
+  failureCode   String?
+  failureReason String?
+  createdAt     DateTime @default(now())
+  user          User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId, createdAt])
+  @@index([email])
+  @@index([success, createdAt])
+  @@map("login_logs")
 }
 
 model Article {
@@ -91,12 +118,12 @@ model Image {
   description String
   area        String
   photos      String[]
-  thumbnails  Json[]   // 存储不同尺寸的缩略图信息，包含 path, size, url
-  location    Json?    // 存储GPS信息，包含 latitude 和 longitude
-  stakeNumber String?  // 桩号，可选
-  offset      Float?   // 偏距，可选
+  thumbnails  Json[] // 存储不同尺寸的缩略图信息，包含 path, size, url
+  location    Json? // 存储GPS信息，包含 latitude 和 longitude
+  stakeNumber String? // 桩号，可选
+  offset      Float? // 偏距，可选
   category    String   @default("safety") // 分类：progress, safety, quality
-  tags        String[] @default([])    // 标签数组
+  tags        String[] @default([]) // 标签数组
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   createdById Int
@@ -106,21 +133,21 @@ model Image {
 }
 
 model SystemLog {
-  id          Int      @id @default(autoincrement())
-  userId      Int      // 保持必填
-  username    String   // 操作用户名，冗余存储方便查询
-  requestUrl  String   // 请求路径
-  method      String   // 请求方法 GET/POST/PUT/DELETE
-  status      Int      // HTTP状态码
-  errorMsg    String?  // 错误信息，可选
-  ip          String   // 客户端IP
-  userAgent   String?  // 用户代理信息，可选
-  duration    Int      // 请求耗时(ms)
-  createdAt   DateTime @default(now())
-  
-  location    Json?    // 存储 IP 地址解析后的地理信息
-  requestData Json?    // 存储请求的额外信息
-  user        User     @relation(fields: [userId], references: [id])  // 改为必填
+  id         Int      @id @default(autoincrement())
+  userId     Int // 保持必填
+  username   String // 操作用户名，冗余存储方便查询
+  requestUrl String // 请求路径
+  method     String // 请求方法 GET/POST/PUT/DELETE
+  status     Int // HTTP状态码
+  errorMsg   String? // 错误信息，可选
+  ip         String // 客户端IP
+  userAgent  String? // 用户代理信息，可选
+  duration   Int // 请求耗时(ms)
+  createdAt  DateTime @default(now())
+
+  location    Json? // 存储 IP 地址解析后的地理信息
+  requestData Json? // 存储请求的额外信息
+  user        User  @relation(fields: [userId], references: [id]) // 改为必填
 
   @@index([userId, createdAt])
   @@index([requestUrl, method])

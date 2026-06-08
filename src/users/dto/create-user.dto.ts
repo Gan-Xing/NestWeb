@@ -1,13 +1,16 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
 	IsString,
 	IsEmail,
 	IsNotEmpty,
 	IsInt,
 	IsArray,
-	MinLength
+	MinLength,
+	IsIn,
+	IsOptional
 	// IsBoolean,
 } from 'class-validator';
+import { USER_STATUS_VALUES, type UserStatus } from '../constants/user-status';
 
 export class CreateUserDto {
 	@ApiProperty()
@@ -26,10 +29,10 @@ export class CreateUserDto {
 	@IsNotEmpty()
 	password: string;
 
-	@ApiProperty()
-	@IsString()
-	@IsNotEmpty()
-	status: string;
+	@ApiPropertyOptional({ enum: USER_STATUS_VALUES })
+	@IsOptional()
+	@IsIn(USER_STATUS_VALUES)
+	status?: UserStatus;
 
 	@ApiProperty()
 	avatar: string;

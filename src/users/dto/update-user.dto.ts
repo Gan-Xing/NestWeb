@@ -9,8 +9,10 @@ import {
   IsInt,
   IsArray,
   IsBoolean,
+  IsIn,
 } from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
+import { USER_STATUS_VALUES, type UserStatus } from '../constants/user-status';
 
 export class UpdateUserDto extends PartialType(CreateUserDto) {
   @ApiPropertyOptional()
@@ -31,10 +33,10 @@ export class UpdateUserDto extends PartialType(CreateUserDto) {
   @IsInt({ each: true })
   roles?: number[]; // 修改为角色ID的数组
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ enum: USER_STATUS_VALUES })
   @IsOptional()
-  @IsString()
-  status?: string;
+  @IsIn(USER_STATUS_VALUES)
+  status?: UserStatus;
 
   @ApiPropertyOptional()
   @IsOptional()

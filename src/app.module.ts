@@ -49,6 +49,8 @@ import { ImagesModule } from "./images/images.module";
 import { QueueModule } from "./queue/queue.module";
 import { DiagnosticsModule } from "./diagnostics/diagnostics.module";
 import { DashboardModule } from "./dashboard/dashboard.module";
+import { AccountModule } from "./account/account.module";
+import { LoginLogsModule } from "./login-logs/login-logs.module";
 import * as path from "path";
 import { PhoneNumberValidator } from "./common/validators/phone.validator";
 import { SystemLogInterceptor } from "./common/interceptors/system-log.interceptor";
@@ -70,6 +72,8 @@ import { SystemLogModule } from "./system-log/system-log.module";
     QueueModule,
     DiagnosticsModule,
     DashboardModule,
+    AccountModule,
+    LoginLogsModule,
     ThrottlerModule.forRoot(buildThrottlerOptions()),
     ConfigModule.forRoot({
       isGlobal: true,

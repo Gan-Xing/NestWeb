@@ -49,6 +49,7 @@ export function createPrismaMock() {
 		permission: createMockObject(),
 		permissionGroup: createMockObject(),
 		role: createMockObject(),
+		loginLog: createMockObject(),
 		user: createMockObject()
 	};
 }

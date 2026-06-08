@@ -9,7 +9,7 @@ export class RolesService {
   constructor(private prisma: PrismaService) {}
 
   async create(createRoleDto: CreateRoleDto): Promise<Role> {
-    const permissionIds = createRoleDto.permissions ?? [];
+    const { permissions: permissionIds = [], ...roleData } = createRoleDto;
     // 在这里处理一个权限ID数组
     const permissions = await this.prisma.permission.findMany({
       where: { id: { in: permissionIds } },
@@ -21,7 +21,7 @@ export class RolesService {
 
     return this.prisma.role.create({
       data: {
-        ...createRoleDto,
+        ...roleData,
         permissions: {
           connect: permissions.map((permission) => ({ id: permission.id })),
         },
@@ -31,11 +31,13 @@ export class RolesService {
 
   async findAll(): Promise<Role[]> {
     return this.prisma.role.findMany({
+      orderBy: [{ sort: "asc" }, { id: "asc" }],
       include: {
         permissions: {
           select: {
             id: true,
             name: true,
+            code: true,
           },
         },
         users: {

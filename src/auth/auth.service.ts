@@ -15,6 +15,12 @@ import { UsersService } from 'src/users/users.service';
 import { HttpService } from '@nestjs/axios';
 import { RegisterByEmailDto, SignUpFormData, ValidateTokenDto } from './dto';
 import { jwtDecode } from 'jwt-decode';
+import { isUserActive } from 'src/users/constants/user-status';
+
+export interface LoginContext {
+	ip?: string | null;
+	userAgent?: string | null;
+}
 
 @Injectable()
 export class AuthService {
@@ -194,32 +200,73 @@ export class AuthService {
 		return tokens;
 	}
 
-	async login(email: string, password: string): Promise<Token> {
+	async login(email: string, password: string, context: LoginContext = {}): Promise<Token> {
 		if (!email || !password) {
+			await this.recordLoginLog({
+				email,
+				success: false,
+				failureCode: 'missing_credentials',
+				failureReason: 'Email and password are required',
+				...context
+			});
 			throw new UnauthorizedException('Email and password are required');
 		}
 		// Step 1: Fetch a user with the given email
-		const user = await this.userService.findOneByEmail(email.toLowerCase());
+		const normalizedEmail = email.toLowerCase();
+		const user = await this.userService.findOneByEmail(normalizedEmail);
 
 		// If no user is found, throw an error
 		if (!user) {
+			await this.recordLoginLog({
+				email: normalizedEmail,
+				success: false,
+				failureCode: 'invalid_credentials',
+				failureReason: 'Invalid credentials',
+				...context
+			});
 			throw new UnauthorizedException('Invalid credentials');
 		}
 
+		if (!isUserActive(user.status)) {
+			await this.recordLoginLog({
+				user,
+				email: normalizedEmail,
+				success: false,
+				failureCode: 'user_disabled',
+				failureReason: 'User is disabled or resigned',
+				...context
+			});
+			throw new UnauthorizedException('User is disabled');
+		}
+
 		// Step 2: Check if the password is correct
-		const isPasswordValid = await this.passwordService.validatePassword(
-			password,
-			user.password
-		);
+		const isPasswordValid = user.password
+			? await this.passwordService.validatePassword(password, user.password)
+			: false;
 
 		// If password does not match, throw an error
 		if (!isPasswordValid) {
+			await this.recordLoginLog({
+				user,
+				email: normalizedEmail,
+				success: false,
+				failureCode: 'invalid_password',
+				failureReason: 'Invalid password',
+				...context
+			});
 			throw new UnauthorizedException('Invalid password');
 		}
 
 		// Step 3: Generate a JWT containing the user's ID and return it
 		const tokens = await this.generateTokens({ userId: user.id });
 		await this.updateRtHash(user.id, tokens.refreshToken);
+		await this.userService.recordSuccessfulLogin(user.id, context.ip);
+		await this.recordLoginLog({
+			user,
+			email: normalizedEmail,
+			success: true,
+			...context
+		});
 		return tokens;
 	}
 
@@ -292,6 +339,33 @@ export class AuthService {
 	private async updateRtHash(userId: number, rt: string): Promise<void> {
 		const hash = await this.passwordService.hashPassword(rt);
 		await this.userService.updateUserToken(userId, hash);
+	}
+
+	private async recordLoginLog(data: {
+		user?: User | null;
+		email?: string | null;
+		ip?: string | null;
+		userAgent?: string | null;
+		success: boolean;
+		failureCode?: string | null;
+		failureReason?: string | null;
+	}) {
+		try {
+			await this.prisma.loginLog.create({
+				data: {
+					userId: data.user?.id,
+					username: data.user?.username,
+					email: data.email ?? data.user?.email,
+					ip: data.ip,
+					userAgent: data.userAgent,
+					success: data.success,
+					failureCode: data.failureCode,
+					failureReason: data.failureReason
+				}
+			});
+		} catch {
+			return;
+		}
 	}
 
 	/**

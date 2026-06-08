@@ -22,6 +22,15 @@ type MenuSeed = {
   children?: MenuSeed[];
 };
 
+type RoleSeed = {
+  code: string;
+  name: string;
+  description?: string;
+  sort: number;
+  enabled?: boolean;
+  permissions: string[];
+};
+
 const menuTree: MenuSeed[] = [
   {
     code: "dashboard",
@@ -74,6 +83,18 @@ const menuTree: MenuSeed[] = [
             name: "删除用户",
             action: "DELETE",
             path: "/users",
+          },
+          {
+            code: "auth.users.disable",
+            name: "启停用户",
+            action: "PATCH",
+            path: "/users/status",
+          },
+          {
+            code: "auth.users.resetPassword",
+            name: "重置用户密码",
+            action: "POST",
+            path: "/users/reset-password",
           },
         ],
       },
@@ -271,6 +292,144 @@ const menuTree: MenuSeed[] = [
       },
     ],
   },
+  {
+    code: "security",
+    name: "安全中心",
+    path: "/security",
+    icon: "SafetyOutlined",
+    sort: 50,
+    children: [
+      {
+        code: "security.loginLogs",
+        name: "登录日志",
+        path: "/security/login-logs",
+        icon: "AuditOutlined",
+        sort: 10,
+        permissions: [
+          {
+            code: "security.loginLogs.view",
+            name: "查看登录日志",
+            action: "GET",
+            path: "/login-logs",
+          },
+        ],
+      },
+    ],
+  },
+  {
+    code: "account",
+    name: "个人账号",
+    path: "/account",
+    icon: "UserOutlined",
+    sort: 90,
+    visible: false,
+    children: [
+      {
+        code: "account.profile",
+        name: "个人中心",
+        path: "/account/profile",
+        sort: 10,
+        visible: false,
+        permissions: [
+          {
+            code: "account.profile.view",
+            name: "查看个人资料",
+            action: "GET",
+            path: "/account/profile",
+          },
+          {
+            code: "account.profile.update",
+            name: "编辑个人资料",
+            action: "PATCH",
+            path: "/account/profile",
+          },
+          {
+            code: "account.password.change",
+            name: "修改个人密码",
+            action: "PATCH",
+            path: "/account/password",
+          },
+        ],
+      },
+    ],
+  },
+];
+
+const roleSeeds: RoleSeed[] = [
+  {
+    code: "admin",
+    name: "系统管理员",
+    description: "拥有系统全部管理权限",
+    sort: 0,
+    permissions: [],
+  },
+  {
+    code: "user",
+    name: "普通用户",
+    description: "默认登录用户能力包",
+    sort: 100,
+    permissions: [
+      "dashboard.view",
+      "account.profile.view",
+      "account.profile.update",
+      "account.password.change",
+    ],
+  },
+  {
+    code: "manager",
+    name: "业务负责人",
+    description: "面向业务管理人员的预置能力包",
+    sort: 20,
+    permissions: [
+      "dashboard.view",
+      "account.profile.view",
+      "account.profile.update",
+      "account.password.change",
+    ],
+  },
+  {
+    code: "operator",
+    name: "运营人员",
+    description: "面向日常运营人员的预置能力包",
+    sort: 30,
+    permissions: [
+      "dashboard.view",
+      "account.profile.view",
+      "account.profile.update",
+      "account.password.change",
+    ],
+  },
+  {
+    code: "finance",
+    name: "财务人员",
+    description: "面向财务业务的预置能力包",
+    sort: 40,
+    permissions: [
+      "dashboard.view",
+      "account.profile.view",
+      "account.profile.update",
+      "account.password.change",
+    ],
+  },
+  {
+    code: "viewer",
+    name: "只读观察员",
+    description: "只保留基础访问能力，适合外部或临时查看",
+    sort: 90,
+    permissions: ["dashboard.view", "account.profile.view"],
+  },
+  {
+    code: "knowledge_admin",
+    name: "知识库管理员",
+    description: "为后续知识库 MVP 预留的能力包",
+    sort: 50,
+    permissions: [
+      "dashboard.view",
+      "account.profile.view",
+      "account.profile.update",
+      "account.password.change",
+    ],
+  },
 ];
 
 const legacyMenuCodes = ["_logs_2"];
@@ -288,8 +447,13 @@ const legacyPermissionAliases = [
 ] as const;
 
 async function main() {
-  const adminRole = await upsertRole("admin", "系统管理员");
-  const userRole = await upsertRole("user", "普通用户");
+  const roles = await Promise.all(roleSeeds.map(upsertRole));
+  const rolesByCode = new Map(roles.map((role) => [role.code, role]));
+  const adminRole = rolesByCode.get("admin");
+
+  if (!adminRole) {
+    throw new Error("Admin role seed failed");
+  }
 
   const permissionIds: number[] = [];
 
@@ -306,17 +470,36 @@ async function main() {
     },
   });
 
-  await connectRolePermissions(userRole.id, ["dashboard.view"]);
+  for (const roleSeed of roleSeeds) {
+    const role = rolesByCode.get(roleSeed.code);
+    if (!role || roleSeed.code === "admin") {
+      continue;
+    }
+
+    await connectRolePermissions(role.id, roleSeed.permissions);
+  }
+
   await upsertAdminUser(adminRole.id);
   await migrateLegacyPermissionAliases();
   await hideLegacyMenus();
 }
 
-async function upsertRole(code: string, name: string) {
+async function upsertRole(role: RoleSeed) {
   return prisma.role.upsert({
-    where: { code },
-    create: { code, name },
-    update: { name },
+    where: { code: role.code },
+    create: {
+      code: role.code,
+      name: role.name,
+      description: role.description,
+      sort: role.sort,
+      enabled: role.enabled ?? true,
+    },
+    update: {
+      name: role.name,
+      description: role.description,
+      sort: role.sort,
+      enabled: role.enabled ?? true,
+    },
   });
 }
 
@@ -434,9 +617,11 @@ async function upsertAdminUser(adminRoleId: number) {
       password: hashedAdminPassword,
       username: admin.username,
       gender: "Male",
+      status: "active",
       departmentId: 1,
       isAdmin: true,
       avatar: "https://gravatar.com/avatar/0000?d=mp&f=y",
+      passwordUpdatedAt: new Date(),
       roles: {
         connect: [{ id: adminRoleId }],
       },
@@ -444,6 +629,8 @@ async function upsertAdminUser(adminRoleId: number) {
     update: {
       password: hashedAdminPassword,
       username: admin.username,
+      status: "active",
+      passwordUpdatedAt: new Date(),
       isAdmin: true,
       roles: {
         connect: [{ id: adminRoleId }],

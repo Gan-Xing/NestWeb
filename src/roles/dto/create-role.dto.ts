@@ -6,6 +6,8 @@ import {
   IsArray,
   IsOptional,
   Matches,
+  IsBoolean,
+  Min,
 } from 'class-validator';
 
 export class CreateRoleDto {
@@ -21,6 +23,22 @@ export class CreateRoleDto {
   @IsString()
   @IsNotEmpty()
   name: string;
+
+  @ApiPropertyOptional({ description: 'Role capability pack description.' })
+  @IsOptional()
+  @IsString()
+  description?: string;
+
+  @ApiPropertyOptional({ description: 'Display order for role lists.' })
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  sort?: number;
+
+  @ApiPropertyOptional({ description: 'Whether this role can be assigned.' })
+  @IsOptional()
+  @IsBoolean()
+  enabled?: boolean;
 
   @ApiPropertyOptional({
     isArray: true,

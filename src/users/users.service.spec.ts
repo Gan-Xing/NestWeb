@@ -103,4 +103,29 @@ describe("UsersService", () => {
       }),
     );
   });
+
+  it("changes current password and clears refresh token", async () => {
+    (prisma.user.findUnique as jest.Mock).mockResolvedValue({
+      password: "old-hash",
+    });
+    (passwordService.validatePassword as jest.Mock).mockResolvedValue(true);
+    (passwordService.hashPassword as jest.Mock).mockResolvedValue("new-hash");
+    (prisma.user.update as jest.Mock).mockResolvedValue({ id: 2 });
+
+    await expect(
+      service.changePassword(2, {
+        currentPassword: "old-password",
+        newPassword: "new-password",
+      }),
+    ).resolves.toBe(true);
+
+    expect(prisma.user.update).toHaveBeenCalledWith({
+      where: { id: 2 },
+      data: expect.objectContaining({
+        password: "new-hash",
+        passwordUpdatedAt: expect.any(Date),
+        hashedRt: null,
+      }),
+    });
+  });
 });

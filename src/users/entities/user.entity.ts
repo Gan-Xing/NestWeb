@@ -1,4 +1,4 @@
-import { Role, User } from '@prisma/client';
+import { LoginLog, Role, User } from '@prisma/client';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Exclude } from 'class-transformer';
 import { ArticleEntity } from 'src/articles/entities/article.entity';
@@ -21,22 +21,22 @@ export class UserEntity implements User {
 	hashedRt: string;
 
 	@ApiProperty()
-	status: string;
+	status: string | null;
 
 	@ApiProperty()
-	username: string;
+	username: string | null;
 
 	@ApiProperty()
-	avatar: string;
+	avatar: string | null;
 
 	@ApiProperty()
-	gender: string;
+	gender: string | null;
 
 	@ApiProperty()
 	isAdmin: boolean;
 
 	@ApiProperty()
-	departmentId: number;
+	departmentId: number | null;
 
 	@ApiProperty()
 	createdAt: Date;
@@ -44,24 +44,36 @@ export class UserEntity implements User {
 	@ApiProperty()
 	updatedAt: Date;
 
+	@ApiPropertyOptional()
+	lastLoginAt: Date | null;
+
+	@ApiPropertyOptional()
+	lastLoginIp: string | null;
+
+	@ApiPropertyOptional()
+	passwordUpdatedAt: Date | null;
+
 	@ApiPropertyOptional({ isArray: true, description: '角色对象数组' })
 	roles?: Role[];
 
 	@ApiPropertyOptional({ isArray: true, description: '用户文章数组' })
 	articles?: ArticleEntity[];
 
-	@ApiProperty()
-	phoneNumber: string; // 使用 ? 使属性变为可选
+	@ApiPropertyOptional({ isArray: true, description: '用户登录日志' })
+	loginLogs?: LoginLog[];
 
 	@ApiProperty()
-	firstName: string;
+	phoneNumber: string | null; // 使用 ? 使属性变为可选
 
 	@ApiProperty()
-	lastName: string;
+	firstName: string | null;
 
 	@ApiProperty()
-	wechatId: string;
+	lastName: string | null;
 
 	@ApiProperty()
-	miniWechatId: string;
+	wechatId: string | null;
+
+	@ApiProperty()
+	miniWechatId: string | null;
 }

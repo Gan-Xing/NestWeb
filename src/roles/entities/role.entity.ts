@@ -17,6 +17,15 @@ export class RoleEntity implements Role {
   @ApiProperty()
   name: string;
 
+  @ApiPropertyOptional()
+  description: string | null;
+
+  @ApiProperty()
+  sort: number;
+
+  @ApiProperty()
+  enabled: boolean;
+
   @ApiProperty()
   createdAt: Date;
 

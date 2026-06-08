@@ -60,8 +60,11 @@ export class AuthController {
   @ApiOkResponse({ type: Token })
   @ApiBadRequestResponse({ description: "Invalid request body" })
   @ApiUnauthorizedResponse({ description: "Invalid credentials" })
-  login(@Body() { email, password }: LoginDto) {
-    return this.auth.login(email, password);
+  login(@Body() { email, password }: LoginDto, @Request() req) {
+    return this.auth.login(email, password, {
+      ip: getRequestIp(req),
+      userAgent: req.headers?.["user-agent"],
+    });
   }
 
   @Post("logout")
@@ -168,4 +171,17 @@ export class AuthController {
   async registerByEmail(@Body() body: RegisterByEmailDto) {
     return this.auth.registerByEmail(body);
   }
+}
+
+function getRequestIp(req): string | null {
+  const forwardedFor = req.headers?.["x-forwarded-for"];
+  if (Array.isArray(forwardedFor)) {
+    return forwardedFor[0] ?? null;
+  }
+
+  if (typeof forwardedFor === "string") {
+    return forwardedFor.split(",")[0]?.trim() || null;
+  }
+
+  return req.ip || req.socket?.remoteAddress || null;
 }

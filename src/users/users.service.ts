@@ -2,8 +2,22 @@ import { BadRequestException, Injectable } from "@nestjs/common";
 import { Prisma, User } from "@prisma/client";
 import { PrismaService } from "src/prisma/prisma.service";
 import { PasswordService } from "src/password/password.service";
-import { CreateUserDto, UpdateUserDto } from "./dto";
+import {
+  ChangePasswordDto,
+  CreateUserDto,
+  ResetPasswordDto,
+  UpdateProfileDto,
+  UpdateUserDto,
+  UpdateUserStatusDto,
+} from "./dto";
 import { PagedQuery, SortObject, RegisterDto } from "src/common";
+import {
+  isUserActive,
+  normalizeUserStatus,
+  USER_STATUS,
+} from "./constants/user-status";
+
+const DEFAULT_AVATAR = "https://gravatar.com/avatar/0000?d=mp&f=y";
 
 @Injectable()
 export class UsersService {
@@ -27,28 +41,22 @@ export class UsersService {
     );
 
     // 在这里处理一个角色ID数组
-    const roles = await this.prisma.role.findMany({
-      where: { id: { in: createUser.roles } },
-    });
-
-    if (roles.length !== createUser.roles.length) {
-      throw new Error(`Some roles do not exist`);
-    }
+    const roles = await this.findAssignableRoles(createUser.roles);
 
     return this.prisma.user.create({
       data: {
-        avatar:
-          createUser?.avatar || "https://gravatar.com/avatar/0000?d=mp&f=y",
+        avatar: createUser?.avatar || DEFAULT_AVATAR,
         isAdmin: false,
         email: createUser.email,
         password: hashedPassword,
         roles: {
           connect: roles.map((role) => ({ id: role.id })), // 连接多个角色
         },
-        status: createUser.status,
+        status: normalizeUserStatus(createUser.status),
         username: createUser.username,
         gender: createUser.gender,
-        departmentId: 123,
+        departmentId: createUser.departmentId ?? null,
+        passwordUpdatedAt: new Date(),
       },
     });
   }
@@ -81,9 +89,10 @@ export class UsersService {
     }
     return await this.prisma.user.create({
       data: {
-        avatar: "https://gravatar.com/avatar/0000?d=mp&f=y",
+        avatar: DEFAULT_AVATAR,
         email: registerUser.email.toLowerCase(),
         password: hashedPassword,
+        status: USER_STATUS.ACTIVE,
         roles: {
           connect: [{ id: defaultRole.id }], // 连接到默认角色
         },
@@ -107,6 +116,7 @@ export class UsersService {
     return await this.prisma.user.create({
       data: {
         wechatId,
+        status: USER_STATUS.ACTIVE,
         roles: {
           connect: [{ id: defaultRole.id }], // 连接到默认角色
         },
@@ -196,6 +206,23 @@ export class UsersService {
     });
   }
 
+  async findOneWithRolesPermissionsAndRecentLogin(id: number) {
+    return this.prisma.user.findUnique({
+      where: { id },
+      include: {
+        roles: {
+          include: {
+            permissions: true,
+          },
+        },
+        loginLogs: {
+          orderBy: { createdAt: "desc" },
+          take: 5,
+        },
+      },
+    });
+  }
+
   async findOneByEmail(email: string): Promise<User | null> {
     return this.prisma.user.findUnique({
       where: { email },
@@ -234,7 +261,7 @@ export class UsersService {
     updateUserDto: UpdateUserDto,
     currentUserId?: number,
   ): Promise<User> {
-    const { roles, password, ...otherData } = updateUserDto; // 解构password
+    const { roles, password, status, ...otherData } = updateUserDto; // 解构password
 
     let hashedPassword;
 
@@ -246,18 +273,116 @@ export class UsersService {
       await this.assertSelfKeepsAdminRole(id, roles);
     }
 
+    const assignableRoles = roles
+      ? await this.findAssignableRoles(roles)
+      : undefined;
+
     return this.prisma.user.update({
       where: { id: id },
       data: {
         ...otherData,
-        ...(hashedPassword && { password: hashedPassword }), // 明确地添加哈希后的密码
-        ...(roles
+        ...(status && { status: normalizeUserStatus(status) }),
+        ...(hashedPassword && {
+          password: hashedPassword,
+          passwordUpdatedAt: new Date(),
+          hashedRt: null,
+        }), // 明确地添加哈希后的密码
+        ...(assignableRoles
           ? {
               roles: {
-                set: roles.map((role) => ({ id: role })),
+                set: assignableRoles.map((role) => ({ id: role.id })),
               },
             }
           : {}),
+      },
+    });
+  }
+
+  async updateUserStatus(
+    id: number,
+    dto: UpdateUserStatusDto,
+    currentUserId?: number,
+  ): Promise<User> {
+    const status = normalizeUserStatus(dto.status);
+
+    if (currentUserId === id && !isUserActive(status)) {
+      throw new BadRequestException("不能禁用或离职当前登录用户");
+    }
+
+    return this.prisma.user.update({
+      where: { id },
+      data: {
+        status,
+        ...(isUserActive(status) ? {} : { hashedRt: null }),
+      },
+    });
+  }
+
+  async resetPassword(id: number, dto: ResetPasswordDto): Promise<User> {
+    const hashedPassword = await this.passwordService.hashPassword(dto.password);
+
+    return this.prisma.user.update({
+      where: { id },
+      data: {
+        password: hashedPassword,
+        passwordUpdatedAt: new Date(),
+        hashedRt: null,
+      },
+    });
+  }
+
+  async changePassword(
+    id: number,
+    dto: ChangePasswordDto,
+  ): Promise<boolean> {
+    const user = await this.prisma.user.findUnique({
+      where: { id },
+      select: { password: true },
+    });
+
+    if (!user?.password) {
+      throw new BadRequestException("当前用户没有可验证的密码");
+    }
+
+    const isCurrentPasswordValid =
+      await this.passwordService.validatePassword(
+        dto.currentPassword,
+        user.password,
+      );
+
+    if (!isCurrentPasswordValid) {
+      throw new BadRequestException("当前密码不正确");
+    }
+
+    const hashedPassword = await this.passwordService.hashPassword(
+      dto.newPassword,
+    );
+
+    await this.prisma.user.update({
+      where: { id },
+      data: {
+        password: hashedPassword,
+        passwordUpdatedAt: new Date(),
+        hashedRt: null,
+      },
+    });
+
+    return true;
+  }
+
+  async updateProfile(id: number, dto: UpdateProfileDto): Promise<User> {
+    return this.prisma.user.update({
+      where: { id },
+      data: dto,
+    });
+  }
+
+  async recordSuccessfulLogin(userId: number, ip?: string | null) {
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        lastLoginAt: new Date(),
+        lastLoginIp: ip || null,
       },
     });
   }
@@ -306,6 +431,28 @@ export class UsersService {
     if (adminRole && !nextRoleIds.includes(adminRole.id)) {
       throw new BadRequestException("不能移除自己当前使用的 admin 管理员角色");
     }
+  }
+
+  private async findAssignableRoles(roleIds: number[]) {
+    const roles = await this.prisma.role.findMany({
+      where: { id: { in: roleIds } },
+      select: {
+        id: true,
+        code: true,
+        enabled: true,
+      },
+    });
+
+    if (roles.length !== roleIds.length) {
+      throw new BadRequestException("部分角色不存在");
+    }
+
+    const disabledRoles = roles.filter((role) => !role.enabled);
+    if (disabledRoles.length > 0) {
+      throw new BadRequestException("不能分配已停用的角色");
+    }
+
+    return roles;
   }
 }
 
