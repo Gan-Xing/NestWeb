@@ -6,6 +6,7 @@
 
 - [单企业通用后台 Handoff v2](ts-fullstack-single-enterprise-handoff-v2.md)
 - [S8 消息中心 + 审批基础预留 + 表格导出 Handoff](ts-fullstack-s8-message-approval-export-handoff.md)
+- [S9 二开交付包 + 演示闭环 + 业务接入规范 Handoff](ts-fullstack-s9-delivery-handoff.md)
 
 ## 历史参考
 
@@ -42,6 +43,7 @@ S5：审计运维                            已完成
 S6：AI 知识助手预留                     暂停，不在当前交付范围
 S7：E2E / 文档 / 交付收口               已完成
 S8：消息中心 + 审批基础预留 + 表格导出  已完成
+S9：二开交付包 + 演示闭环 + 业务接入规范 已完成
 ```
 
 ## 最新收口事实
@@ -51,3 +53,5 @@ S8：消息中心 + 审批基础预留 + 表格导出  已完成
 - Antdpro6 CI 已增加 `pnpm run openapi:nest:check`，防止前端 generated client 漂移。
 - Antdpro6 E2E 已覆盖 S8 审批创建、消息待办、审批处理和 CSV 导出。
 - 2026-06-09 已重新部署前后端容器，并完成登录、消息中心、审批列表、文件中心、系统状态页面巡检。
+- S9 聚焦 demo seed、消息/审批测试补齐、业务模块接入文档、演示脚本和发布检查清单，不新增业务大功能。
+- S4 知识库、S6 AI、Department / Position、多租户、导入、BPMN 和具体业务页面继续不在当前交付范围。

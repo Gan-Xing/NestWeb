@@ -1,9 +1,11 @@
 //src/auth/entity/auth.entity.ts
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty } from "@nestjs/swagger";
 
 export class AuthEntity {
   @ApiProperty()
   accessToken: string;
   @ApiProperty()
-  refreshToken: string;
+  accessExpiresIn: number;
+  @ApiProperty()
+  refreshExpiresIn: number;
 }

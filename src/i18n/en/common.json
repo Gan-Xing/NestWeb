@@ -75,7 +75,8 @@
     "invalid_credentials": "Invalid email or password",
     "user_disabled": "User is disabled",
     "invalid_password": "Invalid password",
-    "invalid_email_code": "Invalid email verification code"
+    "invalid_email_code": "Invalid email verification code",
+    "refresh_token_reused": "Refresh token is invalid. Please sign in again."
   },
   "permissions": {
     "user_not_found": "User not found",

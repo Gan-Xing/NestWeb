@@ -69,6 +69,7 @@ const knownMessageKeys = new Map<string, string>([
   ["User is disabled", "common.auth.user_disabled"],
   ["Invalid password", "common.auth.invalid_password"],
   ["Invalid email verification code", "common.auth.invalid_email_code"],
+  ["Refresh token reuse detected", "common.auth.refresh_token_reused"],
   ["User not found", "common.permissions.user_not_found"],
   ["Permission not found", "common.permissions.permission_not_found"],
   ["Some permissions do not exist", "common.roles.permissions_missing"],

@@ -7,27 +7,36 @@ import {
   HttpStatus,
   Request,
   Get,
+  Res,
 } from "@nestjs/common";
+import type {
+  Request as ExpressRequest,
+  Response as ExpressResponse,
+} from "express";
 import { Throttle } from "@nestjs/throttler";
 import {
   ApiBadRequestResponse,
   ApiOkResponse,
   ApiTags,
   ApiUnauthorizedResponse,
-  ApiBearerAuth,
   ApiCreatedResponse,
 } from "@nestjs/swagger";
 import { Public, RegisterDto, Token } from "src/common";
 import { AuthService } from "./auth.service";
 import {
   LoginDto,
-  RefreshTokenDto,
   RegisterByEmailDto,
   SignUpFormData,
   ValidateTokenDto,
   WechatCodeDto,
 } from "./dto";
 import { buildAuthThrottleRule } from "src/common/configs/runtime-config";
+import {
+  clearRefreshTokenCookie,
+  getRefreshTokenFromRequest,
+  setRefreshTokenCookie,
+} from "./auth-cookie";
+import type { IssuedToken } from "./auth.service";
 
 @Controller("api/auth")
 @ApiTags("auth")
@@ -51,8 +60,12 @@ export class AuthController {
   @Public()
   @Post("miniprogram-login")
   @HttpCode(HttpStatus.OK)
-  async miniprogramLogin(@Body() { code }: WechatCodeDto): Promise<any> {
-    return await this.auth.miniprogramLogin(code);
+  @ApiOkResponse({ type: Token })
+  async miniprogramLogin(
+    @Body() { code }: WechatCodeDto,
+    @Res({ passthrough: true }) res: ExpressResponse,
+  ): Promise<Token> {
+    return this.issueTokenResponse(res, await this.auth.miniprogramLogin(code));
   }
 
   @Public()
@@ -60,19 +73,28 @@ export class AuthController {
   @ApiOkResponse({ type: Token })
   @ApiBadRequestResponse({ description: "Invalid request body" })
   @ApiUnauthorizedResponse({ description: "Invalid credentials" })
-  login(@Body() { email, password }: LoginDto, @Request() req) {
-    return this.auth.login(email, password, {
+  async login(
+    @Body() { email, password }: LoginDto,
+    @Request() req: ExpressRequest,
+    @Res({ passthrough: true }) res: ExpressResponse,
+  ): Promise<Token> {
+    const tokens = await this.auth.login(email, password, {
       ip: getRequestIp(req),
       userAgent: req.headers?.["user-agent"],
     });
+    return this.issueTokenResponse(res, tokens);
   }
 
+  @Public()
   @Post("logout")
-  @ApiBearerAuth()
   @HttpCode(HttpStatus.OK)
-  logout(@Request() req): Promise<boolean> {
-    const id = req.user.id;
-    return this.auth.logout(id);
+  async logout(
+    @Request() req: ExpressRequest,
+    @Res({ passthrough: true }) res: ExpressResponse,
+  ): Promise<boolean> {
+    await this.auth.logoutByRefreshToken(getRefreshTokenFromRequest(req));
+    clearRefreshTokenCookie(res);
+    return true;
   }
 
   @Public()
@@ -121,6 +143,7 @@ export class AuthController {
   @ApiOkResponse({ description: "Validate sms token and send Register" })
   async validateSMSToken(
     @Body() ValidateToken: ValidateTokenDto,
+    @Res({ passthrough: true }) res: ExpressResponse,
   ): Promise<{ isValid: boolean; token?: Token; code?: string }> {
     const isValid = await this.auth.validateSMSVerificationCode(ValidateToken);
 
@@ -139,7 +162,10 @@ export class AuthController {
         country,
         phoneNumber,
       };
-      const token = await this.auth.register(newUserObj);
+      const token = this.issueTokenResponse(
+        res,
+        await this.auth.register(newUserObj),
+      );
       return { isValid, token };
     } else {
       return { isValid: false };
@@ -150,16 +176,32 @@ export class AuthController {
   @Post("register")
   @ApiCreatedResponse({ type: Token })
   @ApiBadRequestResponse({ description: "Invalid request body" })
-  async register(@Body() createUserDto: RegisterDto) {
-    return this.auth.register(createUserDto);
+  async register(
+    @Body() createUserDto: RegisterDto,
+    @Res({ passthrough: true }) res: ExpressResponse,
+  ): Promise<Token> {
+    return this.issueTokenResponse(
+      res,
+      await this.auth.register(createUserDto),
+    );
   }
 
   @Public()
   @Post("refresh")
-  @ApiBearerAuth()
-  @ApiCreatedResponse({ type: Token, description: "Refresh user token." })
-  async refresh(@Body() token: RefreshTokenDto) {
-    return this.auth.refreshToken(token.refreshToken);
+  @HttpCode(HttpStatus.OK)
+  @ApiOkResponse({
+    type: Token,
+    description:
+      "Refresh access token with the HttpOnly refresh token cookie. The refresh token is rotated on every successful call.",
+  })
+  async refresh(
+    @Request() req: ExpressRequest,
+    @Res({ passthrough: true }) res: ExpressResponse,
+  ): Promise<Token> {
+    return this.issueTokenResponse(
+      res,
+      await this.auth.refreshToken(getRefreshTokenFromRequest(req)),
+    );
   }
 
   @Public()
@@ -168,12 +210,20 @@ export class AuthController {
     description: "验证邮箱验证码，若已存在用户则直接登录，否则创建新用户并登录",
     type: Token,
   })
-  async registerByEmail(@Body() body: RegisterByEmailDto) {
-    return this.auth.registerByEmail(body);
+  async registerByEmail(
+    @Body() body: RegisterByEmailDto,
+    @Res({ passthrough: true }) res: ExpressResponse,
+  ): Promise<Token> {
+    return this.issueTokenResponse(res, await this.auth.registerByEmail(body));
+  }
+
+  private issueTokenResponse(res: ExpressResponse, tokens: IssuedToken): Token {
+    setRefreshTokenCookie(res, tokens.refreshToken, tokens.refreshExpiresIn);
+    return this.auth.toTokenResponse(tokens);
   }
 }
 
-function getRequestIp(req): string | null {
+function getRequestIp(req: ExpressRequest): string | null {
   const forwardedFor = req.headers?.["x-forwarded-for"];
   if (Array.isArray(forwardedFor)) {
     return forwardedFor[0] ?? null;

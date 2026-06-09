@@ -49,17 +49,18 @@ Last updated: 2026-06-09
 
 ## Security And Runtime
 
-| Variable                    | Purpose                              | Default                         |
-| --------------------------- | ------------------------------------ | ------------------------------- |
-| `NODE_ENV`                  | Runtime mode                         | `production` in Docker          |
-| `CORS_ENABLED`              | Set `false` to disable CORS entirely | Enabled unless explicitly false |
-| `SWAGGER_ENABLED`           | Enable Swagger/OpenAPI UI            | `false` in production           |
-| `METRICS_PUBLIC`            | Make `/metrics` public               | `false`                         |
-| `METRICS_BEARER_TOKEN`      | Optional bearer token for `/metrics` | Empty                           |
-| `RATE_LIMIT_WINDOW_MS`      | Global rate limit window             | `60000`                         |
-| `RATE_LIMIT_MAX`            | Global request limit                 | `120`                           |
-| `AUTH_RATE_LIMIT_WINDOW_MS` | Auth endpoint rate limit window      | `60000`                         |
-| `AUTH_RATE_LIMIT_MAX`       | Auth endpoint request limit          | `10`                            |
+| Variable                      | Purpose                                                                                              | Default                          |
+| ----------------------------- | ---------------------------------------------------------------------------------------------------- | -------------------------------- |
+| `NODE_ENV`                    | Runtime mode                                                                                         | `production` in Docker           |
+| `CORS_ENABLED`                | Set `false` to disable CORS entirely                                                                 | Enabled unless explicitly false  |
+| `SWAGGER_ENABLED`             | Enable Swagger/OpenAPI UI                                                                            | `false` in production            |
+| `METRICS_PUBLIC`              | Make `/metrics` public                                                                               | `false`                          |
+| `METRICS_BEARER_TOKEN`        | Optional bearer token for `/metrics`                                                                 | Empty                            |
+| `RATE_LIMIT_WINDOW_MS`        | Global rate limit window                                                                             | `60000`                          |
+| `RATE_LIMIT_MAX`              | Global request limit                                                                                 | `120`                            |
+| `AUTH_RATE_LIMIT_WINDOW_MS`   | Auth endpoint rate limit window                                                                      | `60000`                          |
+| `AUTH_RATE_LIMIT_MAX`         | Auth endpoint request limit                                                                          | `10`                             |
+| `REFRESH_TOKEN_COOKIE_SECURE` | Force refresh cookie Secure flag. Use `true` behind HTTPS and only use `false` for local HTTP demos. | Defaults to secure in production |
 
 ## Build Metadata
 
@@ -114,3 +115,12 @@ The seed treats the bootstrap administrator as seed-managed. Running
 `pnpm run db:seed` updates that user's password to `ADMIN_PASSWORD` and connects
 the `admin` role. Use seed deliberately and rotate the password through the same
 environment-controlled process.
+
+## Optional Demo Seed
+
+`pnpm run db:seed:demo` does not introduce new environment variables. It uses
+the existing `DATABASE_URL` and requires base roles from `pnpm run db:seed`.
+
+The demo seed is for local demos and acceptance environments only. It creates
+predictable demo users with password `Demo1234.` and must not run automatically
+in production startup.

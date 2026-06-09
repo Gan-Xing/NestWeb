@@ -12,15 +12,17 @@ Current source of truth:
 - [Handoff index and naming rules](docs/handoff/README.md)
 - [Single-enterprise handoff v2](docs/handoff/ts-fullstack-single-enterprise-handoff-v2.md)
 - [S8 message approval export handoff](docs/handoff/ts-fullstack-s8-message-approval-export-handoff.md)
+- [S9 delivery handoff](docs/handoff/ts-fullstack-s9-delivery-handoff.md)
 
 Historical references:
 
 - [TS full-stack enterprise handoff](docs/handoff/ts-fullstack-enterprise-handoff.md)
 - [Single-enterprise handoff and prompts](docs/handoff/single-enterprise-handoff-and-prompts.md)
 
-Use the v2 handoff plus the S8 handoff as the source of truth for current staged
-work. S0, S1, S2, S3, S5, S7, and S8 are complete; S4 knowledge base and S6 AI
-assistant remain paused.
+Use the v2 handoff plus the S8 and S9 handoffs as the source of truth for
+current staged work. S0, S1, S2, S3, S5, S7, and S8 are complete. S9 packages
+the system for demo, delivery, and secondary development. S4 knowledge base and
+S6 AI assistant remain paused.
 
 ## Enterprise Docs
 
@@ -35,6 +37,13 @@ assistant remain paused.
 - [Release checklist](docs/release-checklist.md)
 - [Rollback guide](docs/rollback.md)
 - [OpenAPI contract](docs/openapi/nestweb.openapi.json)
+- [Business module guide](docs/development/business-module-guide.md)
+- [Message center integration](docs/development/message-center-integration.md)
+- [Approval Lite integration](docs/development/approval-lite-integration.md)
+- [Table export guide](docs/development/table-export-guide.md)
+- [OpenAPI workflow](docs/development/openapi-workflow.md)
+- [E2E guide](docs/development/e2e-guide.md)
+- [Demo script](docs/demo/demo-script.md)
 
 ## Common Commands
 
@@ -44,6 +53,8 @@ pnpm run lint:check
 pnpm test
 pnpm run build
 pnpm run db:migrate:deploy
+pnpm run db:seed
+pnpm run db:seed:demo # optional demo data, never part of production startup
 pnpm run i18n:check
 pnpm run openapi:generate
 pnpm run openapi:check
@@ -96,4 +107,7 @@ DB, Redis, RabbitMQ, MinIO, and Bull queue diagnostics after login.
 - Keep backend API changes aligned with `Antdpro6` OpenAPI generation.
 - For permission model work, system identity should use `code`, not `name`.
 - Do not add multi-tenant or data-permission scope unless the task explicitly asks for it.
+- Do not add S4 knowledge base, S6 AI, Department, Position, import, BPMN, or concrete business pages during S9 delivery packaging.
+- Approval Lite is a single-step approval helper, not a full workflow engine.
+- Table export is current-page CSV export unless a later task explicitly adds backend async export.
 - Keep each staged change small and independently verifiable.

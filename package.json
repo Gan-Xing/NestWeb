@@ -46,6 +46,8 @@
     "db:migrate:deploy": "prisma migrate deploy",
     "db:seed": "node dist/prisma/seed.js",
     "db:seed:dev": "ts-node prisma/seed.ts",
+    "db:seed:demo": "node dist/prisma/seed-demo.js",
+    "db:seed:demo:dev": "ts-node prisma/seed-demo.ts",
     "i18n:check": "node scripts/check-i18n.cjs",
     "openapi:generate": "ts-node -r tsconfig-paths/register scripts/generate-openapi.ts",
     "openapi:check": "pnpm run openapi:generate && git diff --exit-code -- docs/openapi/nestweb.openapi.json"

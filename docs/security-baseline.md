@@ -40,15 +40,26 @@ Tune these values for the deployment size and expected login traffic.
 Current behavior:
 
 - Access tokens and refresh tokens are signed separately.
-- Refresh token hashes are stored server-side.
-- Refresh rotates the stored refresh token hash.
-- Logout clears the stored refresh token hash.
+- Access tokens are returned to the frontend and kept in client storage.
+- Refresh tokens are not returned in JSON responses; they are stored in an
+  `HttpOnly` cookie named `nestweb_refresh_token`.
+- The refresh cookie uses `HttpOnly`, `SameSite=Lax`, `/api/auth` path scope,
+  and `Secure` in production by default. Override
+  `REFRESH_TOKEN_COOKIE_SECURE=false` only for local HTTP demos.
+- Refresh token hashes are stored server-side in `User.hashedRt`.
+- Every successful refresh rotates the refresh JWT and replaces the stored hash.
+- Refresh-token reuse is detected when a valid refresh JWT no longer matches
+  the stored hash. The server clears the stored refresh hash and rejects the
+  request.
+- Logout clears the refresh cookie and revokes the current stored refresh hash
+  when the cookie matches the active session.
 
 Known remaining hardening item:
 
-- Refresh-token reuse detection is not yet implemented as a separate incident
-  signal. Rotation exists, but replay telemetry and forced session invalidation
-  policy should be added before high-risk enterprise deployment.
+- Current storage is single-session per account because `User.hashedRt` stores
+  one active refresh hash. If the product needs multiple concurrent devices,
+  add a `RefreshSession` table with device/session IDs, revocation timestamps,
+  and incident telemetry.
 
 ## Logging
 

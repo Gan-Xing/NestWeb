@@ -72,6 +72,31 @@ pnpm run tsc
 
 不要默认从运行环境 `/openapi.json` 拉 schema，避免连接旧服务后覆盖新接口。
 
+### 消息中心异常
+
+1. 普通用户看不到消息：确认消息 `userId` 是否为当前用户。
+2. 管理员看不到全部消息：确认当前用户是 `Role.code = "admin"` 或具备 `message.manage`。
+3. 待办不能完成：确认消息类型为 `TODO`，状态仍是 `PENDING`，且当前用户是消息接收人。
+4. 通知无法标记已读：查看接口是否返回权限错误或消息已归属其他用户。
+
+### Approval Lite 异常
+
+1. 创建审批后没有待办：确认审批状态为 `PENDING`，审批人为用户或角色，且消息中心服务正常。
+2. 非审批人无法处理：这是预期行为；检查审批请求的 `approverUserId` 或 `approverRoleId`。
+3. 重复通过/驳回失败：这是预期行为；已处理审批不能重复处理。
+4. 取消后仍有待办：检查取消动作是否调用了待办取消逻辑，或是否存在非 demo/历史脏数据。
+
+Approval Lite 是单步审批预留能力，不是 BPMN 或复杂审批流。请假、报销、加班等具体业务页面不属于当前交付范围。
+
+### Demo Seed
+
+```bash
+pnpm run db:seed
+pnpm run db:seed:demo
+```
+
+Demo seed 只重置 demo-scoped 消息、Approval Lite 请求和 demo 文件元数据。它不会新增 schema，不应作为生产启动命令。
+
 ## 回滚原则
 
 - 数据库 migration 使用 `prisma migrate deploy`，不要手工改线上结构。

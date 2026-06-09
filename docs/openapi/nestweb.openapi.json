@@ -766,7 +766,14 @@
         },
         "responses": {
           "200": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Token"
+                }
+              }
+            }
           }
         },
         "tags": [
@@ -820,11 +827,6 @@
             "description": ""
           }
         },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
         "tags": [
           "auth"
         ]
@@ -940,19 +942,9 @@
       "post": {
         "operationId": "AuthController_refresh",
         "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/RefreshTokenDto"
-              }
-            }
-          }
-        },
         "responses": {
-          "201": {
-            "description": "Refresh user token.",
+          "200": {
+            "description": "Refresh access token with the HttpOnly refresh token cookie. The refresh token is rotated on every successful call.",
             "content": {
               "application/json": {
                 "schema": {
@@ -962,11 +954,6 @@
             }
           }
         },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
         "tags": [
           "auth"
         ]
@@ -4740,6 +4727,26 @@
           "code"
         ]
       },
+      "Token": {
+        "type": "object",
+        "properties": {
+          "accessToken": {
+            "type": "string"
+          },
+          "accessExpiresIn": {
+            "type": "number"
+          },
+          "refreshExpiresIn": {
+            "type": "number",
+            "description": "Refresh token expiry timestamp in milliseconds. The refresh token itself is stored in an HttpOnly cookie."
+          }
+        },
+        "required": [
+          "accessToken",
+          "accessExpiresIn",
+          "refreshExpiresIn"
+        ]
+      },
       "LoginDto": {
         "type": "object",
         "properties": {
@@ -4753,29 +4760,6 @@
         "required": [
           "email",
           "password"
-        ]
-      },
-      "Token": {
-        "type": "object",
-        "properties": {
-          "accessToken": {
-            "type": "string"
-          },
-          "refreshToken": {
-            "type": "string"
-          },
-          "accessExpiresIn": {
-            "type": "number"
-          },
-          "refreshExpiresIn": {
-            "type": "number"
-          }
-        },
-        "required": [
-          "accessToken",
-          "refreshToken",
-          "accessExpiresIn",
-          "refreshExpiresIn"
         ]
       },
       "SignUpFormData": {
@@ -4870,17 +4854,6 @@
           "email",
           "password",
           "phoneNumber"
-        ]
-      },
-      "RefreshTokenDto": {
-        "type": "object",
-        "properties": {
-          "refreshToken": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "refreshToken"
         ]
       },
       "RegisterByEmailDto": {

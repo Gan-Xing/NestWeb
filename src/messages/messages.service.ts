@@ -267,12 +267,14 @@ export class MessagesService {
     const where: Prisma.MessageWhereInput = {};
 
     if (query.scope === "all") {
-      const canManage = await this.userHasPermission(
-        currentUser.id,
-        "message.manage",
-      );
-      if (!currentUser.isAdmin && !canManage) {
-        throw new ForbiddenException("没有查看全部消息的权限");
+      if (!currentUser.isAdmin) {
+        const canManage = await this.userHasPermission(
+          currentUser.id,
+          "message.manage",
+        );
+        if (!canManage) {
+          throw new ForbiddenException("没有查看全部消息的权限");
+        }
       }
     } else {
       where.userId = currentUser.id;

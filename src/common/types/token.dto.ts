@@ -1,5 +1,5 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { IsJWT, IsNotEmpty, IsNumber, IsString } from 'class-validator';
+import { ApiProperty } from "@nestjs/swagger";
+import { IsJWT, IsNotEmpty, IsNumber, IsString } from "class-validator";
 
 export class Token {
   @IsString()
@@ -8,12 +8,6 @@ export class Token {
   @ApiProperty()
   accessToken: string;
 
-  @IsString()
-  @IsJWT()
-  @IsNotEmpty()
-  @ApiProperty()
-  refreshToken: string;
-
   @IsNumber()
   @IsNotEmpty()
   @ApiProperty()
@@ -21,6 +15,9 @@ export class Token {
 
   @IsNumber()
   @IsNotEmpty()
-  @ApiProperty()
+  @ApiProperty({
+    description:
+      "Refresh token expiry timestamp in milliseconds. The refresh token itself is stored in an HttpOnly cookie.",
+  })
   refreshExpiresIn: number;
 }

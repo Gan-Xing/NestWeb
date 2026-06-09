@@ -104,6 +104,28 @@ Production seed requires `ADMIN_EMAIL`, `ADMIN_USERNAME`, and a strong
 `ADMIN_PASSWORD`; do not use `admin123` or any placeholder value outside local
 development.
 
+## Optional Demo Seed
+
+S9 adds an optional demo dataset for product walkthroughs and acceptance demos:
+
+```bash
+pnpm run db:seed:demo
+```
+
+For local TypeScript execution before build:
+
+```bash
+pnpm run db:seed:demo:dev
+```
+
+The demo seed is idempotent and only resets demo-scoped data. It creates demo
+users, role bindings, messages, todos, Approval Lite requests, and optional file
+metadata. It is not part of production startup and must not be run
+automatically in deployment pipelines.
+
+All demo users use the password `Demo1234.`. Run `pnpm run db:seed` before demo
+seed so the required role codes exist.
+
 ## Health Endpoints
 
 - `GET /api/health`: backward-compatible liveness payload

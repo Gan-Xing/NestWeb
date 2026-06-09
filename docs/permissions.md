@@ -45,3 +45,16 @@
 - 系统内置菜单和权限由 seed 维护，后台不应该编辑或删除。
 - 前端 `access.ts` 只负责展示控制，最终接口权限以后端 guard 为准。
 - 新增页面时必须同步：后端权限码、seed 菜单、前端路由、前端 access、OpenAPI client、本文档。
+
+## Demo Seed 角色绑定
+
+`pnpm run db:seed:demo` 不新增权限码，只复用基础 seed 的系统角色：
+
+| 演示用户               | 绑定角色   | 用途                     |
+| ---------------------- | ---------- | ------------------------ |
+| `manager@example.com`  | `manager`  | 审批人、消息创建人演示   |
+| `operator@example.com` | `operator` | 申请人、待办接收人演示   |
+| `finance@example.com`  | `finance`  | 财务审批/驳回场景演示    |
+| `viewer@example.com`   | `viewer`   | 只读通知和低权限账号演示 |
+
+所有 demo 用户密码为 `Demo1234.`。Demo seed 只用于演示和验收环境，不属于生产启动流程。

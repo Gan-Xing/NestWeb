@@ -47,3 +47,25 @@
 - 组织树、部门审批、部门数据隔离出现真实需求前，不新增 `Department`。
 - 前端菜单由后端 `PermissionGroup` seed 和当前用户角色权限共同决定。
 - S8 已加入消息中心、审批请求和主要表格当前页 CSV 导出，不包含复杂审批流、导入和后端异步导出任务。
+- S9 只做 demo seed、测试、文档和二开规范收口，不新增具体业务页面。
+
+## 当前页导出覆盖
+
+当前导出能力是前端当前页 CSV 导出，不是后台异步全量导出。
+
+| 页面       | 路由                   | 导出文件前缀          | 状态   |
+| ---------- | ---------------------- | --------------------- | ------ |
+| 用户管理   | `/auth/users`          | `users`               | 已覆盖 |
+| 角色能力包 | `/auth/roles`          | `roles`               | 已覆盖 |
+| 权限管理   | `/auth/permissions`    | `permissions`         | 已覆盖 |
+| 菜单管理   | `/auth/menus`          | `menus`               | 已覆盖 |
+| 图片资源   | `/resources/images`    | `images`              | 已覆盖 |
+| 字典管理   | `/system/dicts`        | `dicts`               | 已覆盖 |
+| 系统参数   | `/system/config`       | `system-config`       | 已覆盖 |
+| 文件中心   | `/system/files`        | `files`               | 已覆盖 |
+| 操作日志   | `/system/logs`         | `system-logs`         | 已覆盖 |
+| 登录日志   | `/security/login-logs` | `login-logs`          | 已覆盖 |
+| 消息中心   | `/message-center`      | `messages-*`          | 已覆盖 |
+| 审批请求   | `/approvals/requests`  | `approval-requests-*` | 已覆盖 |
+
+如需全量、异步、权限水印或审计留痕导出，应在后续阶段新增后端导出任务，而不是扩展当前页导出语义。
