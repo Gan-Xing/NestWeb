@@ -3,6 +3,8 @@
 This guide covers the backend API deployment flow for the single-tenant
 enterprise admin baseline.
 
+Last updated: 2026-06-09
+
 ## Runtime Requirements
 
 - Node.js `24.x`
@@ -127,10 +129,13 @@ environments:
 SWAGGER_ENABLED=true
 ```
 
-If OpenAPI output changes, regenerate the Antdpro6 client with:
+Generate OpenAPI from the NestWeb source tree, not from a running production
+API:
 
 ```bash
-pnpm run openapi:nest
+pnpm run openapi:generate
+pnpm run openapi:check
 ```
 
-from the `Antdpro6` repository.
+This writes `docs/openapi/nestweb.openapi.json`. Antdpro6 reads this fixed
+contract by default when running `pnpm run openapi:nest`.

@@ -1,5 +1,7 @@
 # 运维排障手册
 
+更新时间：2026-06-09
+
 ## 核心探针
 
 | 接口                      | 用途                                                      | 是否鉴权 |
@@ -53,14 +55,22 @@ curl -I http://localhost:8000/dashboard
 
 ### OpenAPI 或前端 service 不一致
 
-1. 在可信环境启用 `SWAGGER_ENABLED=true`。
-2. 启动 NestWeb。
-3. 在 Antdpro6 执行：
+1. 在 NestWeb 从源码重新生成固定契约：
 
 ```bash
-OPENAPI_SCHEMA_URL=http://localhost:3030/openapi.json pnpm run openapi:nest
+pnpm run openapi:generate
+pnpm run openapi:check
+```
+
+2. 在 Antdpro6 重新生成前端客户端：
+
+```bash
+pnpm run openapi:nest
+pnpm run openapi:nest:check
 pnpm run tsc
 ```
+
+不要默认从运行环境 `/openapi.json` 拉 schema，避免连接旧服务后覆盖新接口。
 
 ## 回滚原则
 

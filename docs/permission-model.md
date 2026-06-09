@@ -1,5 +1,7 @@
 # Permission Model
 
+Last updated: 2026-06-09
+
 The current system is a single-tenant RBAC baseline. It does not yet implement
 tenant isolation, organization trees, or row-level data permissions.
 

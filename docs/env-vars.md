@@ -3,6 +3,8 @@
 Use `.env.example` as the template. `.env` is ignored by git and must not be
 committed.
 
+Last updated: 2026-06-09
+
 ## Required
 
 | Variable             | Purpose                                   | Production rule                                                            |

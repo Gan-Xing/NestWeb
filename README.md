@@ -3,18 +3,24 @@
 NestWeb is the NestJS backend for the TS full-stack enterprise admin system.
 It is paired with `Antdpro6` for the frontend.
 
+Last updated: 2026-06-09
+
 ## Enterprise Handoff
 
-The current enterprise modernization plan is saved here:
+Current source of truth:
 
+- [Handoff index and naming rules](docs/handoff/README.md)
 - [Single-enterprise handoff v2](docs/handoff/ts-fullstack-single-enterprise-handoff-v2.md)
 - [S8 message approval export handoff](docs/handoff/ts-fullstack-s8-message-approval-export-handoff.md)
+
+Historical references:
+
 - [TS full-stack enterprise handoff](docs/handoff/ts-fullstack-enterprise-handoff.md)
 - [Single-enterprise handoff and prompts](docs/handoff/single-enterprise-handoff-and-prompts.md)
 
-Use the v2 handoff document as the source of truth for current staged work.
-S1, S2, S3, S5, and S7 are the active completed baseline; S4 knowledge base and
-S6 AI assistant remain paused.
+Use the v2 handoff plus the S8 handoff as the source of truth for current staged
+work. S0, S1, S2, S3, S5, S7, and S8 are complete; S4 knowledge base and S6 AI
+assistant remain paused.
 
 ## Enterprise Docs
 
@@ -38,6 +44,7 @@ pnpm test
 pnpm run build
 pnpm run db:migrate:deploy
 pnpm run openapi:generate
+pnpm run openapi:check
 ```
 
 ## OpenAPI Contract
@@ -51,6 +58,9 @@ pnpm run openapi:generate
 The generated contract is written to `docs/openapi/nestweb.openapi.json`.
 Antdpro6 reads this file by default when regenerating `src/services/nest-web`,
 which avoids accidentally connecting to an old backend schema.
+
+CI runs `pnpm run openapi:check` to regenerate the contract and fail if
+`docs/openapi/nestweb.openapi.json` has uncommitted drift.
 
 ## Local Docker
 

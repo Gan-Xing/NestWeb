@@ -3,6 +3,8 @@
 Use this guide when a deployment causes runtime failures, broken login, or
 database/API incompatibility.
 
+Last updated: 2026-06-09
+
 ## Before Rollback
 
 Capture current state:

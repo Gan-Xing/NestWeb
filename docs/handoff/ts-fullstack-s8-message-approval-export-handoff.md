@@ -1,6 +1,6 @@
 # TS 全栈单企业后台 S8 Handoff：消息中心 + 审批基础预留 + 表格导出
 
-日期：2026-06-08  
+日期：2026-06-09
 适用仓库：
 
 - `Gan-Xing/NestWeb`：NestJS + Prisma + PostgreSQL 后端
@@ -20,11 +20,14 @@
 
 ### 0.1 当前实现状态
 
-截至 2026-06-08，本阶段已按 S8 范围完成：
+截至 2026-06-09，本阶段已按 S8 范围完成：
 
 - NestWeb：新增 `Message`、`ApprovalRequest`、`ApprovalAction` 模型、migration、消息接口、单步审批接口、seed 菜单和权限码。
 - Antdpro6：新增 `/message-center`、`/approvals/requests` 页面，补齐 access、路由、菜单图标、service typings。
 - 表格导出：主要管理表已加入前端当前页 CSV 导出，使用 `export.data` 控制展示。
+- OpenAPI：NestWeb 已支持源码生成 `docs/openapi/nestweb.openapi.json`，Antdpro6 默认从该固定契约生成 `src/services/nest-web`。
+- CI：NestWeb 已增加 `pnpm run openapi:check`，Antdpro6 已增加 `pnpm run openapi:nest:check`。
+- E2E：已覆盖审批创建、生成待办、消息 CSV 导出、审批通过、审批 CSV 导出。
 
 本阶段仍明确不包含：
 
@@ -44,6 +47,8 @@
 - Antdpro6：`pnpm run build`
 - Antdpro6：`pnpm run e2e`
 - Antdpro6：`docker compose up -d --build frontend`
+- NestWeb：`pnpm run openapi:check`
+- Antdpro6：`pnpm run openapi:nest:check`
 
 已落地：
 
@@ -51,9 +56,10 @@
 - seed 已在 Docker 网络内执行，菜单和权限码已写入数据库。
 - 运行态巡检已确认 `/api/messages`、`/api/approval-requests` 返回 200，用户菜单包含 `message.center` 和 `approval.requests`。
 
-未执行：
+后续边界：
 
-- OpenAPI 自动生成。原因：当前前端已手动同步 service/typings；自动生成需确保连接的是新后端 schema，避免覆盖手写修正。
+- OpenAPI 已自动生成，但必须以 NestWeb 源码生成的固定契约为准，不从旧运行环境的 `/openapi.json` 拉取。
+- S8 审批仍是 Approval Lite，不包含 BPMN、流程设计器、多级审批、会签、条件分支或具体请假 / 报销业务。
 
 ## 1. 本阶段最终确认新增内容
 
@@ -845,20 +851,29 @@ export.data
 
 ## 11. OpenAPI
 
-后端新增接口后，前端必须重新生成：
+后端新增接口后，必须先从 NestWeb 源码生成固定契约：
 
 ```bash
-OPENAPI_SCHEMA_URL=http://localhost:3030/openapi.json pnpm run openapi:nest
+cd NestWeb
+pnpm run openapi:generate
+pnpm run openapi:check
 ```
 
-必须 review：
+然后在 Antdpro6 从该固定契约生成客户端：
+
+```bash
+cd Antdpro6
+pnpm run openapi:nest
+pnpm run openapi:nest:check
+```
+
+默认读取：
 
 ```text
-src/services/nest-web/messages.ts
-src/services/nest-web/approvalRequests.ts
+../NestWeb/docs/openapi/nestweb.openapi.json
 ```
 
-实际文件名以生成结果为准。
+不要默认从运行环境的 `/openapi.json` 拉取 schema，除非本次任务明确要验证某个指定环境的接口契约。
 
 ## 12. E2E 建议
 
@@ -871,18 +886,22 @@ src/services/nest-web/approvalRequests.ts
 4. 打开 /approvals/requests
 5. 创建一个基础审批请求
 6. 审批请求出现在列表
-7. 取消该审批请求
-8. 导出按钮存在并可点击，不要求验证文件内容
+7. 审批待办出现在消息中心
+8. 导出消息当前页 CSV
+9. 审批通过
+10. 导出审批当前页 CSV
 ```
 
-如果 E2E 创建真实数据会污染环境，可以只做页面加载 + 权限菜单断言，数据创建放后续。
+当前 Antdpro6 `e2e/s8.spec.ts` 已覆盖上述链路。运行生产类环境 E2E 时使用专用测试账号，不使用 bootstrap 管理员账号。
 
 ## 13. 文档更新
 
 更新 handoff：
 
 ```text
-docs/handoff/single-enterprise-platform-handoff.md
+docs/handoff/ts-fullstack-single-enterprise-handoff-v2.md
+docs/handoff/ts-fullstack-s8-message-approval-export-handoff.md
+docs/handoff/README.md
 ```
 
 新增或更新：
@@ -898,7 +917,7 @@ docs/release-checklist.md
 ```text
 S4 知识库：暂停
 S6 AI：暂停
-S8 消息中心 + 审批预留 + 表格导出：进行中/完成
+S8 消息中心 + 审批预留 + 表格导出：已完成
 ```
 
 ## 14. 分 PR 建议
@@ -909,6 +928,7 @@ S8 消息中心 + 审批预留 + 表格导出：进行中/完成
 PR1：Message Center 后端 + 前端
 PR2：Approval Lite 后端 + 前端
 PR3：Table Export + E2E + 文档
+PR4：OpenAPI 源码契约生成 + CI 漂移检查
 ```
 
 如果让 AI 一次性做，也必须要求它保持边界，不要越界做知识库、AI、流程引擎。
@@ -918,6 +938,7 @@ PR3：Table Export + E2E + 文档
 NestWeb：
 
 ```bash
+pnpm run openapi:check
 pnpm run lint:check
 pnpm test -- --runInBand
 pnpm run build
@@ -926,16 +947,14 @@ pnpm run build
 Antdpro6：
 
 ```bash
+pnpm run openapi:nest:check
 pnpm run tsc
 pnpm test -- --runInBand
 pnpm run build
-```
-
-如果 E2E 环境已配置：
-
-```bash
 pnpm run e2e
 ```
+
+`pnpm run e2e` 需要 `E2E_BASE_URL`、`E2E_ADMIN_EMAIL`、`E2E_ADMIN_PASSWORD` 指向可写的非生产验收环境。
 
 ## 16. 风险点
 

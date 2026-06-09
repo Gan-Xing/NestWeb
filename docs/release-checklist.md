@@ -2,16 +2,20 @@
 
 用于单企业通用后台基础版发布前验收。
 
+更新时间：2026-06-09
+
 ## 代码状态
 
 - [ ] NestWeb 工作区干净或只包含本次发布改动。
 - [ ] Antdpro6 工作区干净或只包含本次发布改动。
 - [ ] 本次不包含 S4 知识库、S6 AI、多租户、部门岗位或 RBAC 大重构。
-- [ ] 后端 DTO / Controller 变化后已确认是否需要重新生成 OpenAPI。
+- [ ] 后端 DTO / Controller 变化后已运行 `pnpm run openapi:check`。
+- [ ] 前端 generated client 已运行 `pnpm run openapi:nest:check`。
 
 ## 后端验收
 
 ```bash
+pnpm run openapi:check
 pnpm run lint:check
 pnpm test -- --runInBand
 pnpm run build
@@ -32,6 +36,7 @@ pnpm run db:seed
 ## 前端验收
 
 ```bash
+pnpm run openapi:nest:check
 pnpm run tsc
 pnpm test -- --runInBand
 pnpm run build

@@ -2,6 +2,8 @@
 
 This document describes the current production safety defaults for NestWeb.
 
+Last updated: 2026-06-09
+
 ## Runtime Configuration
 
 Production startup validates:
@@ -67,12 +69,12 @@ Health endpoints:
 
 - `/api/health/live`: process liveness
 - `/api/health/ready`: database and Redis readiness
+- `/api/system/status`: authenticated database, Redis, RabbitMQ, MinIO, and queue diagnostics
 
 Use readiness for load balancer traffic decisions.
 
-RabbitMQ and MinIO are documented readiness TODOs. Keep them out of traffic
-gating until cheap, authenticated probes are wired in application startup
-context.
+RabbitMQ and MinIO stay out of the unauthenticated readiness gate. Diagnose them
+through authenticated operations endpoints instead of blocking traffic startup.
 
 Metrics:
 
