@@ -1,0 +1,96 @@
+{
+  "operation_success": "操作成功",
+  "internal_server_error": "服务器内部错误",
+  "database_operation_failed": "数据库操作失败",
+  "unique_conflict": "数据已存在，请检查唯一字段",
+  "not_authenticated": "未登录或登录已过期",
+  "insufficient_permissions": "权限不足",
+  "metrics_protected": "Metrics 接口受保护",
+  "admin_required": "需要管理员权限",
+  "not_found": "资源不存在",
+  "messages": {
+    "notification_only_read": "只有通知可以标记已读",
+    "todo_only_complete": "只有待办可以完成",
+    "todo_cancelled": "待办已取消",
+    "todo_only_cancel": "只有待办可以取消",
+    "todo_completed": "待办已完成",
+    "view_all_forbidden": "没有查看全部消息的权限",
+    "not_found": "消息不存在",
+    "other_user_forbidden": "不能操作其他用户的消息"
+  },
+  "approvals": {
+    "only_pending_cancel": "只能取消待审批请求",
+    "cancel_forbidden": "没有取消该审批请求的权限",
+    "already_processed": "审批请求已处理",
+    "not_found": "审批请求不存在",
+    "select_user": "请选择审批用户",
+    "select_role": "请选择审批角色",
+    "user_invalid": "审批用户不存在或已停用",
+    "role_invalid": "审批角色不存在或已停用",
+    "view_forbidden": "没有查看该审批请求的权限",
+    "approver_forbidden": "当前用户不是该审批请求的审批人"
+  },
+  "files": {
+    "upload_required": "未找到上传的文件",
+    "size_limit": "文件大小超过限制",
+    "not_found": "文件不存在",
+    "storage_delete_failed": "文件存储对象删除失败"
+  },
+  "images": {
+    "not_found": "图片不存在",
+    "view_forbidden": "无权访问此图片",
+    "update_forbidden": "无权更新此图片",
+    "delete_forbidden": "无权删除此图片",
+    "upload_required": "未找到上传的文件",
+    "unsupported_type": "不支持的文件类型"
+  },
+  "system_config": {
+    "not_found": "系统参数不存在",
+    "not_editable": "该系统参数不可编辑"
+  },
+  "dicts": {
+    "type_not_found": "字典类型不存在",
+    "type_not_found_or_disabled": "字典类型不存在或已停用",
+    "item_not_found": "字典项不存在",
+    "type_code_not_found": "字典类型编码不存在"
+  },
+  "login_logs": {
+    "not_found": "登录日志不存在"
+  },
+  "users": {
+    "email_exists": "邮箱已被使用",
+    "phone_exists": "手机号已被使用",
+    "default_role_missing": "默认角色不存在",
+    "invalid_pagination": "分页参数无效",
+    "cannot_disable_self": "不能禁用或离职当前登录用户",
+    "password_missing": "当前用户没有可验证的密码",
+    "current_password_invalid": "当前密码不正确",
+    "cannot_remove_own_admin": "不能移除自己当前使用的 admin 管理员角色",
+    "roles_missing": "部分角色不存在",
+    "roles_disabled": "不能分配已停用的角色",
+    "cannot_delete_self": "不能删除当前登录用户"
+  },
+  "auth": {
+    "email_password_required": "邮箱和密码不能为空",
+    "invalid_credentials": "邮箱或密码错误",
+    "user_disabled": "用户已禁用",
+    "invalid_password": "密码错误",
+    "invalid_email_code": "邮箱验证码错误"
+  },
+  "permissions": {
+    "user_not_found": "用户不存在",
+    "permission_not_found": "权限不存在"
+  },
+  "roles": {
+    "permissions_missing": "部分权限不存在",
+    "admin_locked": "系统管理员角色 admin 由系统维护，不能在后台编辑或删除"
+  },
+  "system_managed": {
+    "operation": {
+      "edit": "编辑",
+      "delete": "删除"
+    },
+    "menu_locked": "系统内置菜单「{name}」由代码种子维护，不能在后台{operation}",
+    "permission_locked": "系统内置权限「{name}」由代码种子维护，不能在后台{operation}"
+  }
+}

@@ -1,0 +1,96 @@
+{
+  "operation_success": "Operation successful",
+  "internal_server_error": "Internal server error",
+  "database_operation_failed": "Database operation failed",
+  "unique_conflict": "Data already exists. Please check unique fields.",
+  "not_authenticated": "Not authenticated or session expired",
+  "insufficient_permissions": "Insufficient permissions",
+  "metrics_protected": "Metrics endpoint is protected",
+  "admin_required": "Admin privileges are required",
+  "not_found": "Resource not found",
+  "messages": {
+    "notification_only_read": "Only notifications can be marked as read",
+    "todo_only_complete": "Only todos can be completed",
+    "todo_cancelled": "Todo has been cancelled",
+    "todo_only_cancel": "Only todos can be cancelled",
+    "todo_completed": "Todo has been completed",
+    "view_all_forbidden": "No permission to view all messages",
+    "not_found": "Message not found",
+    "other_user_forbidden": "Cannot operate on another user's message"
+  },
+  "approvals": {
+    "only_pending_cancel": "Only pending approval requests can be cancelled",
+    "cancel_forbidden": "No permission to cancel this approval request",
+    "already_processed": "Approval request has already been processed",
+    "not_found": "Approval request not found",
+    "select_user": "Please select an approver user",
+    "select_role": "Please select an approver role",
+    "user_invalid": "Approver user does not exist or is disabled",
+    "role_invalid": "Approver role does not exist or is disabled",
+    "view_forbidden": "No permission to view this approval request",
+    "approver_forbidden": "Current user is not the approver for this request"
+  },
+  "files": {
+    "upload_required": "Uploaded file was not found",
+    "size_limit": "File size exceeds the limit",
+    "not_found": "File not found",
+    "storage_delete_failed": "Failed to delete the stored file object"
+  },
+  "images": {
+    "not_found": "Image not found",
+    "view_forbidden": "No permission to access this image",
+    "update_forbidden": "No permission to update this image",
+    "delete_forbidden": "No permission to delete this image",
+    "upload_required": "Uploaded file was not found",
+    "unsupported_type": "Unsupported file type"
+  },
+  "system_config": {
+    "not_found": "System config not found",
+    "not_editable": "This system config is not editable"
+  },
+  "dicts": {
+    "type_not_found": "Dictionary type not found",
+    "type_not_found_or_disabled": "Dictionary type not found or disabled",
+    "item_not_found": "Dictionary item not found",
+    "type_code_not_found": "Dictionary type code not found"
+  },
+  "login_logs": {
+    "not_found": "Login log not found"
+  },
+  "users": {
+    "email_exists": "Email is already in use",
+    "phone_exists": "Phone number is already in use",
+    "default_role_missing": "Default role does not exist",
+    "invalid_pagination": "Invalid pagination parameters",
+    "cannot_disable_self": "Cannot disable or resign the current signed-in user",
+    "password_missing": "Current user has no verifiable password",
+    "current_password_invalid": "Current password is incorrect",
+    "cannot_remove_own_admin": "Cannot remove the admin role currently used by yourself",
+    "roles_missing": "Some roles do not exist",
+    "roles_disabled": "Cannot assign disabled roles",
+    "cannot_delete_self": "Cannot delete the current signed-in user"
+  },
+  "auth": {
+    "email_password_required": "Email and password are required",
+    "invalid_credentials": "Invalid email or password",
+    "user_disabled": "User is disabled",
+    "invalid_password": "Invalid password",
+    "invalid_email_code": "Invalid email verification code"
+  },
+  "permissions": {
+    "user_not_found": "User not found",
+    "permission_not_found": "Permission not found"
+  },
+  "roles": {
+    "permissions_missing": "Some permissions do not exist",
+    "admin_locked": "The admin system role is maintained by the system and cannot be edited or deleted in the admin panel"
+  },
+  "system_managed": {
+    "operation": {
+      "edit": "edited",
+      "delete": "deleted"
+    },
+    "menu_locked": "System-managed menu \"{name}\" is maintained by code seed and cannot be {operation} in the admin panel",
+    "permission_locked": "System-managed permission \"{name}\" is maintained by code seed and cannot be {operation} in the admin panel"
+  }
+}
