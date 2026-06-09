@@ -30,6 +30,7 @@ assistant remain paused.
 - [Permission code inventory](docs/permissions.md)
 - [Permission model](docs/permission-model.md)
 - [Security baseline](docs/security-baseline.md)
+- [Internationalization](docs/i18n.md)
 - [Operations runbook](docs/ops-runbook.md)
 - [Release checklist](docs/release-checklist.md)
 - [Rollback guide](docs/rollback.md)
@@ -43,6 +44,7 @@ pnpm run lint:check
 pnpm test
 pnpm run build
 pnpm run db:migrate:deploy
+pnpm run i18n:check
 pnpm run openapi:generate
 pnpm run openapi:check
 ```

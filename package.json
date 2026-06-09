@@ -46,6 +46,7 @@
     "db:migrate:deploy": "prisma migrate deploy",
     "db:seed": "node dist/prisma/seed.js",
     "db:seed:dev": "ts-node prisma/seed.ts",
+    "i18n:check": "node scripts/check-i18n.cjs",
     "openapi:generate": "ts-node -r tsconfig-paths/register scripts/generate-openapi.ts",
     "openapi:check": "pnpm run openapi:generate && git diff --exit-code -- docs/openapi/nestweb.openapi.json"
   },
@@ -80,7 +81,6 @@
     "exiftool-vendored": "^36.0.0",
     "fs-extra": "^11.3.5",
     "helmet": "^8.2.0",
-    "i18n": "^0.15.3",
     "ioredis": "^5.11.1",
     "jwt-decode": "^4.0.0",
     "minio": "^8.0.7",

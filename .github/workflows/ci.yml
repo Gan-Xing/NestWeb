@@ -49,6 +49,9 @@ jobs:
       - name: Verify OpenAPI contract is current
         run: pnpm run openapi:check
 
+      - name: Verify i18n locales are current
+        run: pnpm run i18n:check
+
       - name: Lint
         run: pnpm run lint:check
 

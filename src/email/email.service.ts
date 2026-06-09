@@ -76,8 +76,8 @@ export class EmailService {
     const emailVerificationCode = getRandomByte(3);
     const expirationTime = 15; // 验证码有效期，单位为分钟
 
-    // 根据国家选择语言
-    const lang = country === 'CN' ? 'zh' : 'fr';
+    // Official backend locales are zh and en. Non-CN registrations use English.
+    const lang = country?.toUpperCase() === 'CN' ? 'zh' : 'en';
 
     // 获取翻译后的文本
     const subject = await this.i18n.translate('email.verification.subject', { lang });

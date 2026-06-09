@@ -105,7 +105,7 @@ import { SystemLogModule } from "./system-log/system-log.module";
     SmsModule,
     WechatModule,
     I18nModule.forRoot({
-      fallbackLanguage: "en", // 默认语言
+      fallbackLanguage: "zh", // 默认语言
       loaderOptions: {
         path: path.join(process.cwd(), "src", "i18n"), // 使用 process.cwd() 动态定位根目录
         watch: true, // 监听文件变动
