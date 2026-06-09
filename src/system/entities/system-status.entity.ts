@@ -39,6 +39,23 @@ export class QueueStatusEntity {
   error?: string;
 }
 
+export class SystemStatusDependenciesEntity {
+  @ApiProperty({ type: SystemDependencyHealthEntity })
+  database: SystemDependencyHealthEntity;
+
+  @ApiProperty({ type: SystemDependencyHealthEntity })
+  redis: SystemDependencyHealthEntity;
+
+  @ApiProperty({ type: SystemDependencyHealthEntity })
+  rabbitmq: SystemDependencyHealthEntity;
+
+  @ApiProperty({ type: SystemDependencyHealthEntity })
+  minio: SystemDependencyHealthEntity;
+
+  @ApiProperty({ type: SystemDependencyHealthEntity })
+  queue: SystemDependencyHealthEntity;
+}
+
 export class SystemQueuesEntity {
   @ApiProperty({ enum: ["ok", "error"] })
   status: SystemDependencyStatus;
@@ -57,14 +74,8 @@ export class SystemStatusEntity {
   @ApiProperty()
   checkedAt: string;
 
-  @ApiProperty()
-  dependencies: {
-    database: SystemDependencyHealthEntity;
-    redis: SystemDependencyHealthEntity;
-    rabbitmq: SystemDependencyHealthEntity;
-    minio: SystemDependencyHealthEntity;
-    queue: SystemDependencyHealthEntity;
-  };
+  @ApiProperty({ type: SystemStatusDependenciesEntity })
+  dependencies: SystemStatusDependenciesEntity;
 }
 
 export class SystemVersionEntity {

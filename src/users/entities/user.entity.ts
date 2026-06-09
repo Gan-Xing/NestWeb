@@ -1,7 +1,37 @@
-import { LoginLog, Role, User } from '@prisma/client';
+import { LoginLog, User } from '@prisma/client';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Exclude } from 'class-transformer';
-import { ArticleEntity } from 'src/articles/entities/article.entity';
+import { LoginLogEntity } from 'src/login-logs/entities/login-log.entity';
+import { PermissionEntity } from 'src/permissions/entities/permission.entity';
+
+export class UserRoleEntity {
+	@ApiProperty()
+	id: number;
+
+	@ApiProperty()
+	code: string;
+
+	@ApiProperty()
+	name: string;
+
+	@ApiPropertyOptional()
+	description: string | null;
+
+	@ApiProperty()
+	sort: number;
+
+	@ApiProperty()
+	enabled: boolean;
+
+	@ApiProperty()
+	createdAt: Date;
+
+	@ApiProperty()
+	updatedAt: Date;
+
+	@ApiPropertyOptional({ type: () => [PermissionEntity], description: '权限对象数组' })
+	permissions?: PermissionEntity[];
+}
 
 export class UserEntity implements User {
 	constructor(partial: Partial<UserEntity>) {
@@ -53,13 +83,17 @@ export class UserEntity implements User {
 	@ApiPropertyOptional()
 	passwordUpdatedAt: Date | null;
 
-	@ApiPropertyOptional({ isArray: true, description: '角色对象数组' })
-	roles?: Role[];
+	@ApiPropertyOptional({ type: () => [UserRoleEntity], description: '角色对象数组' })
+	roles?: UserRoleEntity[];
 
-	@ApiPropertyOptional({ isArray: true, description: '用户文章数组' })
-	articles?: ArticleEntity[];
+	@ApiPropertyOptional({
+		type: 'array',
+		items: { type: 'object' },
+		description: '用户文章数组'
+	})
+	articles?: unknown[];
 
-	@ApiPropertyOptional({ isArray: true, description: '用户登录日志' })
+	@ApiPropertyOptional({ type: () => [LoginLogEntity], description: '用户登录日志' })
 	loginLogs?: LoginLog[];
 
 	@ApiProperty()

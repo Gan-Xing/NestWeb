@@ -22,7 +22,7 @@ import {
   ApiTags,
 } from "@nestjs/swagger";
 import { CurrentUser, Permissions } from "src/common";
-import { FileAssetEntity } from "./entities";
+import { FileAssetEntity, FileDownloadEntity } from "./entities";
 import { FilesService } from "./files.service";
 import { QueryFileAssetDto, UploadFileAssetDto } from "./dto";
 
@@ -81,7 +81,7 @@ export class FilesController {
   }
 
   @Get(":id/download")
-  @ApiOkResponse()
+  @ApiOkResponse({ type: FileDownloadEntity })
   @Permissions("system.files.download")
   getDownloadUrl(@Param("id", ParseIntPipe) id: number) {
     return this.filesService.getDownloadUrl(id);

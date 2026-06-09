@@ -58,3 +58,14 @@ export class FileAssetEntity implements FileAsset {
   @ApiPropertyOptional()
   uploader?: FileAssetUploader | null;
 }
+
+export class FileDownloadEntity {
+  @ApiProperty()
+  id: number;
+
+  @ApiProperty()
+  originalName: string;
+
+  @ApiProperty()
+  url: string;
+}

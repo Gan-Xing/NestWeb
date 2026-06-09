@@ -45,7 +45,8 @@
     "test:e2e": "jest --config ./test/jest-e2e.json",
     "db:migrate:deploy": "prisma migrate deploy",
     "db:seed": "node dist/prisma/seed.js",
-    "db:seed:dev": "ts-node prisma/seed.ts"
+    "db:seed:dev": "ts-node prisma/seed.ts",
+    "openapi:generate": "ts-node -r tsconfig-paths/register scripts/generate-openapi.ts"
   },
   "dependencies": {
     "@alicloud/dypnsapi20170525": "^2.0.0",

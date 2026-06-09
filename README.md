@@ -27,6 +27,7 @@ S6 AI assistant remain paused.
 - [Operations runbook](docs/ops-runbook.md)
 - [Release checklist](docs/release-checklist.md)
 - [Rollback guide](docs/rollback.md)
+- [OpenAPI contract](docs/openapi/nestweb.openapi.json)
 
 ## Common Commands
 
@@ -36,7 +37,20 @@ pnpm run lint:check
 pnpm test
 pnpm run build
 pnpm run db:migrate:deploy
+pnpm run openapi:generate
 ```
+
+## OpenAPI Contract
+
+Generate the frontend contract from source, not from a running production API:
+
+```bash
+pnpm run openapi:generate
+```
+
+The generated contract is written to `docs/openapi/nestweb.openapi.json`.
+Antdpro6 reads this file by default when regenerating `src/services/nest-web`,
+which avoids accidentally connecting to an old backend schema.
 
 ## Local Docker
 
